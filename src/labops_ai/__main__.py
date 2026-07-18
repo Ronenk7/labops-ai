@@ -7,6 +7,12 @@ from labops_ai.network import (
     TcpConnectivityChecker,
     print_network_report,
 )
+from labops_ai.processes import (
+    ProcessMonitor,
+    ProcessMonitorConfigLoader,
+    PsutilProcessChecker,
+    print_process_report,
+)
 from labops_ai.services import (
     ServiceMonitor,
     ServiceMonitorConfigLoader,
@@ -80,6 +86,25 @@ def run_service_health() -> None:
     )
 
 
+def run_process_health() -> None:
+    """Run Linux process monitoring and print its report."""
+    config = ProcessMonitorConfigLoader().load()
+    checker = PsutilProcessChecker(
+        collection_config=config.collection,
+    )
+    monitor = ProcessMonitor(
+        config=config,
+        checker=checker,
+    )
+
+    summary = monitor.run()
+
+    print_process_report(
+        summary=summary,
+        report=config.report,
+    )
+
+
 def main() -> None:
     """Run every currently supported LabOps AI check."""
     run_system_health()
@@ -87,6 +112,8 @@ def main() -> None:
     run_network_health()
     print()
     run_service_health()
+    print()
+    run_process_health()
 
 
 if __name__ == "__main__":

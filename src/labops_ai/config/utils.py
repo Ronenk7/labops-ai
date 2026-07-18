@@ -11,6 +11,7 @@ CONFIG_DIRECTORY = PROJECT_ROOT / "config"
 SYSTEM_HEALTH_CONFIG_PATH = CONFIG_DIRECTORY / "system_health.json"
 NETWORK_CONNECTIVITY_CONFIG_PATH = CONFIG_DIRECTORY / "network_connectivity.json"
 SERVICE_MONITOR_CONFIG_PATH = CONFIG_DIRECTORY / "service_monitor.json"
+PROCESS_MONITOR_CONFIG_PATH = CONFIG_DIRECTORY / "process_monitor.json"
 
 
 def load_json_config(config_path: str | Path) -> dict[str, Any]:

@@ -1,0 +1,59 @@
+{
+  "valid_cpu_thresholds": {
+    "warning": 70.0,
+    "critical": 90.0
+  },
+  "valid_memory_thresholds": {
+    "warning": 500.0,
+    "critical": 1000.0
+  },
+  "valid_target": {
+    "process_name": "python",
+    "label": "Python Runtime",
+    "required": true
+  },
+  "valid_collection": {
+    "cpu_sample_interval_seconds": 0.05
+  },
+  "invalid_intervals": [
+    {
+      "case_id": "zero-interval",
+      "value": 0
+    },
+    {
+      "case_id": "negative-interval",
+      "value": -1
+    },
+    {
+      "case_id": "string-interval",
+      "value": "0.05"
+    },
+    {
+      "case_id": "boolean-interval",
+      "value": true
+    }
+  ],
+  "valid_report": {
+    "title": "LabOps AI - Process Health",
+    "separator": "---------------------------",
+    "overall_label": "Overall status",
+    "process_label": "Process",
+    "name_label": "Name",
+    "required_label": "Required",
+    "check_status_label": "Check status",
+    "health_label": "Health",
+    "instances_label": "Instances",
+    "pids_label": "PIDs",
+    "cpu_label": "Total CPU",
+    "memory_label": "Total memory",
+    "runtime_label": "Longest runtime",
+    "failure_reason_label": "Failure reason",
+    "error_message_label": "Error",
+    "yes_value": "Yes",
+    "no_value": "No",
+    "cpu_unit": "%",
+    "memory_unit": "MB",
+    "runtime_unit": "seconds",
+    "decimal_places": 2
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "healthy_instance": {
+    "pid": 101,
+    "cpu_percent": 10.0,
+    "memory_mb": 100.0,
+    "runtime_seconds": 300.0
+  },
+  "warning_cpu_instance": {
+    "pid": 102,
+    "cpu_percent": 75.0,
+    "memory_mb": 100.0,
+    "runtime_seconds": 300.0
+  },
+  "warning_memory_instance": {
+    "pid": 103,
+    "cpu_percent": 10.0,
+    "memory_mb": 700.0,
+    "runtime_seconds": 300.0
+  },
+  "critical_instance": {
+    "pid": 104,
+    "cpu_percent": 95.0,
+    "memory_mb": 1200.0,
+    "runtime_seconds": 300.0
+  }
+}

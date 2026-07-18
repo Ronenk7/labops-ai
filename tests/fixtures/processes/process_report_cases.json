@@ -1,0 +1,3 @@
+{
+  "expected_report": "LabOps AI - Process Health\n---------------------------\nProcess: Python Runtime\nName: python\nRequired: Yes\nCheck status: RUNNING\nHealth: HEALTHY\nInstances: 2\nPIDs: 101, 102\nTotal CPU: 20.00%\nTotal memory: 150.00 MB\nLongest runtime: 100.00 seconds\n\nProcess: Missing Worker\nName: missing-worker\nRequired: No\nCheck status: NOT_RUNNING\nHealth: WARNING\n---------------------------\nOverall status: WARNING"
+}
