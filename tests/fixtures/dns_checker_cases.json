@@ -1,0 +1,46 @@
+{
+  "successful_checks": [
+    {
+      "id": "successful-ipv4-resolution",
+      "hostname": "www.cloudflare.com",
+      "resolved_address": "104.16.124.96",
+      "clock_values": [10.0, 10.0125],
+      "expected_latency_ms": 12.5
+    },
+    {
+      "id": "successful-ipv6-resolution",
+      "hostname": "www.google.com",
+      "resolved_address": "2001:4860:4860::8888",
+      "clock_values": [20.0, 20.008],
+      "expected_latency_ms": 8.0
+    }
+  ],
+  "dns_resolution_failures": [
+    {
+      "id": "hostname-not-found",
+      "hostname": "unavailable.example",
+      "error_message": "Name or service not known",
+      "expected_reason": "DNS_RESOLUTION_FAILED"
+    }
+  ],
+  "timeout_failures": [
+    {
+      "id": "dns-resolution-timeout",
+      "hostname": "slow.example",
+      "error_message": "DNS request timed out",
+      "expected_reason": "TIMEOUT"
+    }
+  ],
+  "operating_system_failures": [
+    {
+      "id": "operating-system-resolution-error",
+      "hostname": "system-error.example",
+      "error_message": "Temporary operating system failure",
+      "expected_reason": "UNKNOWN_ERROR"
+    }
+  ],
+  "resolver_adapter": {
+    "hostname": "www.cloudflare.com",
+    "resolved_address": "104.16.124.96"
+  }
+}

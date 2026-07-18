@@ -1,0 +1,165 @@
+{
+  "valid_results": [
+    {
+      "id": "passed-dns-check",
+      "check_type": "DNS",
+      "status": "PASSED",
+      "target": "  www.cloudflare.com  ",
+      "latency_ms": 12.4,
+      "resolved_address": "  104.16.124.96  ",
+      "failure_reason": null,
+      "error_message": null,
+      "expected_target": "www.cloudflare.com",
+      "expected_resolved_address": "104.16.124.96"
+    },
+    {
+      "id": "passed-tcp-check",
+      "check_type": "TCP",
+      "status": "PASSED",
+      "target": "1.1.1.1:443",
+      "latency_ms": 8.2,
+      "resolved_address": null,
+      "failure_reason": null,
+      "error_message": null,
+      "expected_target": "1.1.1.1:443",
+      "expected_resolved_address": null
+    },
+    {
+      "id": "failed-dns-check",
+      "check_type": "DNS",
+      "status": "FAILED",
+      "target": "unavailable.example",
+      "latency_ms": null,
+      "resolved_address": null,
+      "failure_reason": "DNS_RESOLUTION_FAILED",
+      "error_message": "DNS resolution failed",
+      "expected_target": "unavailable.example",
+      "expected_resolved_address": null
+    },
+    {
+      "id": "failed-tcp-timeout",
+      "check_type": "TCP",
+      "status": "FAILED",
+      "target": "1.1.1.1:443",
+      "latency_ms": null,
+      "resolved_address": null,
+      "failure_reason": "TIMEOUT",
+      "error_message": "TCP connection timed out",
+      "expected_target": "1.1.1.1:443",
+      "expected_resolved_address": null
+    }
+  ],
+  "invalid_string_targets": [
+    {
+      "id": "empty-target",
+      "value": ""
+    },
+    {
+      "id": "whitespace-target",
+      "value": "   "
+    }
+  ],
+  "invalid_target_types": [
+    {
+      "id": "numeric-target",
+      "value": 123
+    },
+    {
+      "id": "boolean-target",
+      "value": true
+    },
+    {
+      "id": "null-target",
+      "value": null
+    }
+  ],
+  "invalid_latency_types": [
+    {
+      "id": "string-latency",
+      "value": "10.0"
+    },
+    {
+      "id": "boolean-latency",
+      "value": true
+    },
+    {
+      "id": "object-latency",
+      "value": {}
+    }
+  ],
+  "invalid_latency_values": [
+    {
+      "id": "negative-latency",
+      "value": -0.1
+    },
+    {
+      "id": "nan-latency",
+      "value": "nan"
+    },
+    {
+      "id": "positive-infinity-latency",
+      "value": "inf"
+    },
+    {
+      "id": "negative-infinity-latency",
+      "value": "-inf"
+    }
+  ],
+  "passed_results_with_failure_details": [
+    {
+      "id": "passed-with-failure-reason",
+      "failure_reason": "UNKNOWN_ERROR",
+      "error_message": null
+    },
+    {
+      "id": "passed-with-error-message",
+      "failure_reason": null,
+      "error_message": "Unexpected failure"
+    }
+  ],
+  "invalid_optional_strings": [
+    {
+      "id": "empty-resolved-address",
+      "field": "resolved_address",
+      "value": ""
+    },
+    {
+      "id": "whitespace-resolved-address",
+      "field": "resolved_address",
+      "value": "   "
+    },
+    {
+      "id": "numeric-resolved-address",
+      "field": "resolved_address",
+      "value": 123
+    },
+    {
+      "id": "empty-error-message",
+      "field": "error_message",
+      "value": ""
+    },
+    {
+      "id": "whitespace-error-message",
+      "field": "error_message",
+      "value": "   "
+    },
+    {
+      "id": "numeric-error-message",
+      "field": "error_message",
+      "value": 123
+    }
+  ],
+  "base_passed_result": {
+    "check_type": "DNS",
+    "status": "PASSED",
+    "target": "www.cloudflare.com",
+    "latency_ms": 10.0
+  },
+  "base_failed_result": {
+    "check_type": "TCP",
+    "status": "FAILED",
+    "target": "1.1.1.1:443",
+    "failure_reason": "TCP_CONNECTION_FAILED",
+    "error_message": "Connection refused"
+  }
+}
