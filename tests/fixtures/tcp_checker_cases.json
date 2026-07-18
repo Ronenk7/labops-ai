@@ -1,0 +1,73 @@
+{
+  "successful_checks": [
+    {
+      "id": "successful-ipv4-connection",
+      "host": "1.1.1.1",
+      "port": 443,
+      "timeout_seconds": 3.0,
+      "clock_values": [10.0, 10.0082],
+      "expected_latency_ms": 8.2,
+      "expected_target": "1.1.1.1:443"
+    },
+    {
+      "id": "successful-ipv6-connection",
+      "host": "2001:4860:4860::8888",
+      "port": 53,
+      "timeout_seconds": 4.0,
+      "clock_values": [20.0, 20.0125],
+      "expected_latency_ms": 12.5,
+      "expected_target": "[2001:4860:4860::8888]:53"
+    }
+  ],
+  "connection_failures": [
+    {
+      "id": "connection-refused",
+      "host": "1.1.1.1",
+      "port": 443,
+      "timeout_seconds": 3.0,
+      "exception_type": "ConnectionRefusedError",
+      "error_message": "Connection refused",
+      "expected_reason": "TCP_CONNECTION_FAILED"
+    },
+    {
+      "id": "network-unreachable",
+      "host": "8.8.8.8",
+      "port": 53,
+      "timeout_seconds": 3.0,
+      "exception_type": "OSError",
+      "error_message": "Network is unreachable",
+      "expected_reason": "TCP_CONNECTION_FAILED"
+    }
+  ],
+  "timeout_failures": [
+    {
+      "id": "tcp-connection-timeout",
+      "host": "1.1.1.1",
+      "port": 443,
+      "timeout_seconds": 2.0,
+      "error_message": "Connection attempt timed out",
+      "expected_reason": "TIMEOUT"
+    }
+  ],
+  "unknown_failures": [
+    {
+      "id": "unexpected-runtime-error",
+      "host": "1.1.1.1",
+      "port": 443,
+      "timeout_seconds": 3.0,
+      "error_message": "Unexpected connector failure",
+      "expected_reason": "UNKNOWN_ERROR"
+    }
+  ],
+  "adapter": {
+    "host": "8.8.8.8",
+    "port": 53,
+    "timeout_seconds": 2.5
+  },
+  "invalid_dependencies": {
+    "tcp_config": null,
+    "connection_settings": null,
+    "connector": null,
+    "clock": null
+  }
+}
