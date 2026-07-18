@@ -1,17 +1,9 @@
 """Collect, evaluate, and report Linux system health metrics."""
 from __future__ import annotations
 from dataclasses import dataclass
-from enum import StrEnum
+from labops_ai.health_status import HealthStatus
 import psutil
 from labops_ai.config import (SystemHealthConfig, SystemHealthConfigLoader, SystemHealthReportConfig)
-
-
-class HealthStatus(StrEnum):
-    """Define the supported system health severity levels."""
-
-    HEALTHY = "HEALTHY"
-    WARNING = "WARNING"
-    CRITICAL = "CRITICAL"
 
 
 MetricValues = dict[str, float]

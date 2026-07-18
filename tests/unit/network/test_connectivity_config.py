@@ -8,12 +8,17 @@ from labops_ai.network.connectivity_config import (
     ConnectivityConfig,
     DnsTestConfig,
     LatencyThresholds,
+    NetworkReportConfig,
     TcpTestConfig,
 )
 from tests.support.fixture_loader import load_test_fixture
 
 
 CASES = load_test_fixture("network/connectivity_config_cases.json")
+REPORT_CASES = load_test_fixture(
+    "network/connectivity_report_config_cases.json"
+)
+VALID_REPORT = REPORT_CASES["valid_report"]
 
 
 @pytest.mark.unit
@@ -31,6 +36,7 @@ class TestConnectivityConfig:
             latency_thresholds_ms=LatencyThresholds(
                 **case["latency_thresholds_ms"]
             ),
+            report=NetworkReportConfig(**VALID_REPORT),
         )
 
         assert config.dns_test.hostname == case["dns_test"]["hostname"]
@@ -39,6 +45,7 @@ class TestConnectivityConfig:
         assert config.connection.timeout_seconds == float(
             case["connection"]["timeout_seconds"]
         )
+        assert config.report.title == VALID_REPORT["title"]
 
 
 @pytest.mark.unit
@@ -198,7 +205,8 @@ class TestConnectionSettings:
         """Verify that invalid timeout values fail validation."""
         expected_error = (
             TypeError
-            if isinstance(case["value"], (str, bool)) or case["value"] is None
+            if isinstance(case["value"], (str, bool))
+            or case["value"] is None
             else ValueError
         )
 

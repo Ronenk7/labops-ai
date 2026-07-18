@@ -1,0 +1,54 @@
+{
+  "base_config": {
+    "dns_hostname": "example.com",
+    "tcp_host": "1.1.1.1",
+    "tcp_port": 443,
+    "timeout_seconds": 3.0,
+    "warning_latency_ms": 250.0,
+    "critical_latency_ms": 1000.0
+  },
+  "latency_evaluation_cases": [
+    {
+      "id": "latency-below-warning",
+      "latency_ms": 249.9,
+      "expected_status": "HEALTHY"
+    },
+    {
+      "id": "latency-at-warning",
+      "latency_ms": 250.0,
+      "expected_status": "WARNING"
+    },
+    {
+      "id": "latency-between-thresholds",
+      "latency_ms": 500.0,
+      "expected_status": "WARNING"
+    },
+    {
+      "id": "latency-at-critical",
+      "latency_ms": 1000.0,
+      "expected_status": "CRITICAL"
+    },
+    {
+      "id": "latency-above-critical",
+      "latency_ms": 1500.0,
+      "expected_status": "CRITICAL"
+    }
+  ],
+  "overall_status_cases": [
+    {
+      "id": "all-checks-healthy",
+      "statuses": ["HEALTHY", "HEALTHY"],
+      "expected_status": "HEALTHY"
+    },
+    {
+      "id": "one-warning-check",
+      "statuses": ["HEALTHY", "WARNING"],
+      "expected_status": "WARNING"
+    },
+    {
+      "id": "one-critical-check",
+      "statuses": ["WARNING", "CRITICAL"],
+      "expected_status": "CRITICAL"
+    }
+  ]
+}

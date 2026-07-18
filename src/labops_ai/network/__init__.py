@@ -4,6 +4,8 @@ from labops_ai.network.connectivity_loader import ConnectivityConfigLoader
 from labops_ai.network.connectivity_result import (ConnectivityCheckResult, ConnectivityCheckStatus, ConnectivityCheckType, ConnectivityFailureReason)
 from labops_ai.network.dns_checker import DnsConnectivityChecker, resolve_hostname
 from labops_ai.network.tcp_checker import (TcpConnectivityChecker, connect_to_tcp_target)
+from labops_ai.network.connectivity_monitor import (NetworkConnectivityMonitor, NetworkConnectivitySummary)
+from labops_ai.network.connectivity_config import (ConnectionSettings, ConnectivityConfig, DnsTestConfig, LatencyThresholds, NetworkReportConfig, TcpTestConfig)
 
 
 __all__ = [
@@ -17,6 +19,9 @@ __all__ = [
     "DnsConnectivityChecker",
     "DnsTestConfig",
     "LatencyThresholds",
+    "NetworkConnectivityMonitor",
+    "NetworkConnectivitySummary",
+    "NetworkReportConfig",
     "TcpConnectivityChecker",
     "TcpTestConfig",
     "connect_to_tcp_target",

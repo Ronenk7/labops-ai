@@ -12,5 +12,18 @@
   "latency_thresholds_ms": {
     "warning": 250.0,
     "critical": 1000.0
+  },
+  "report": {
+    "title": "LabOps AI - Network Health",
+    "separator": "---------------------------",
+    "overall_label": "Overall status",
+    "dns_label": "DNS",
+    "tcp_label": "TCP",
+    "target_label": "Target",
+    "latency_label": "Latency",
+    "latency_unit": "ms",
+    "resolved_address_label": "Resolved address",
+    "failure_reason_label": "Failure reason",
+    "error_message_label": "Error"
   }
 }

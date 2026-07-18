@@ -1,0 +1,17 @@
+{
+  "valid_report": {
+    "title": "LabOps AI - Network Health",
+    "separator": "---------------------------",
+    "overall_label": "Overall status",
+    "dns_label": "DNS",
+    "tcp_label": "TCP",
+    "target_label": "Target",
+    "latency_label": "Latency",
+    "latency_unit": "ms",
+    "resolved_address_label": "Resolved address",
+    "failure_reason_label": "Failure reason",
+    "error_message_label": "Error"
+  },
+  "empty_title": "",
+  "invalid_latency_unit": 100
+}

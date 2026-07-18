@@ -2,8 +2,8 @@
 from __future__ import annotations
 from pathlib import Path
 from typing import Any
-from labops_ai.config.utils import NETWORK_CONNECTIVITY_CONFIG_PATH, load_json_config
-from labops_ai.network.connectivity_config import (ConnectionSettings, ConnectivityConfig, DnsTestConfig, LatencyThresholds, TcpTestConfig)
+from labops_ai.config.utils import (NETWORK_CONNECTIVITY_CONFIG_PATH, load_json_config)
+from labops_ai.network.connectivity_config import (ConnectionSettings, ConnectivityConfig, DnsTestConfig, LatencyThresholds, NetworkReportConfig, TcpTestConfig)
 
 
 class ConnectivityConfigLoader:
@@ -27,30 +27,51 @@ class ConnectivityConfigLoader:
         tcp_test = configuration["tcp_test"]
         connection = configuration["connection"]
         latency_thresholds = configuration["latency_thresholds_ms"]
+        report = configuration["report"]
 
-        return ConnectivityConfig(
-            dns_test=DnsTestConfig(hostname=dns_test["hostname"]),
-            tcp_test=TcpTestConfig(
-                host=tcp_test["host"],
-                port=tcp_test["port"],
-            ),
-            connection=ConnectionSettings(
-                timeout_seconds=connection["timeout_seconds"],
-            ),
-            latency_thresholds_ms=LatencyThresholds(
-                warning=latency_thresholds["warning"],
-                critical=latency_thresholds["critical"],
+        return ConnectivityConfig(dns_test=DnsTestConfig(hostname=dns_test["hostname"]),
+            tcp_test=TcpTestConfig(host=tcp_test["host"], port=tcp_test["port"]),
+            connection=ConnectionSettings(timeout_seconds=connection["timeout_seconds"]),
+            latency_thresholds_ms=LatencyThresholds(warning=latency_thresholds["warning"], critical=latency_thresholds["critical"]),
+            report=NetworkReportConfig(
+                title=report["title"],
+                separator=report["separator"],
+                overall_label=report["overall_label"],
+                dns_label=report["dns_label"],
+                tcp_label=report["tcp_label"],
+                target_label=report["target_label"],
+                latency_label=report["latency_label"],
+                latency_unit=report["latency_unit"],
+                resolved_address_label=report["resolved_address_label"],
+                failure_reason_label=report["failure_reason_label"],
+                error_message_label=report["error_message_label"],
             ),
         )
 
     @classmethod
-    def _validate_configuration(cls, configuration: dict[str, Any]) -> None:
+    def _validate_configuration(
+        cls,
+        configuration: dict[str, Any],
+    ) -> None:
         """Validate all required sections and fields in the JSON structure."""
         required_fields = {
             "dns_test": {"hostname"},
             "tcp_test": {"host", "port"},
             "connection": {"timeout_seconds"},
             "latency_thresholds_ms": {"warning", "critical"},
+            "report": {
+                "title",
+                "separator",
+                "overall_label",
+                "dns_label",
+                "tcp_label",
+                "target_label",
+                "latency_label",
+                "latency_unit",
+                "resolved_address_label",
+                "failure_reason_label",
+                "error_message_label",
+            },
         }
 
         cls._validate_exact_keys(configuration, set(required_fields),"configuration")
@@ -61,14 +82,10 @@ class ConnectivityConfigLoader:
             if not isinstance(section, dict):
                 raise ValueError(f"Connectivity section '{section_name}' must be a JSON object.")
 
-            cls._validate_exact_keys(section, section_fields, f"section '{section_name}'")
+            cls._validate_exact_keys(section, section_fields,f"section '{section_name}'")
 
     @staticmethod
-    def _validate_exact_keys(
-        configuration: dict[str, Any],
-        required_keys: set[str],
-        location: str,
-    ) -> None:
+    def _validate_exact_keys(configuration: dict[str, Any], required_keys: set[str], location: str) -> None:
         """Reject missing and unsupported JSON keys."""
         configuration_keys = set(configuration)
         missing_keys = required_keys - configuration_keys
@@ -81,3 +98,4 @@ class ConnectivityConfigLoader:
         if unexpected_keys:
             formatted_keys = ", ".join(sorted(unexpected_keys))
             raise ValueError(f"Unsupported keys in connectivity {location}: {formatted_keys}.")
+        

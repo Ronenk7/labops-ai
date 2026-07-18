@@ -1,6 +1,7 @@
 """Integration tests for external connectivity configuration loading."""
 import json
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -9,6 +10,20 @@ from tests.support.fixture_loader import load_test_fixture
 
 
 CASES = load_test_fixture("config/connectivity_loader_cases.json")
+REPORT_CASES = load_test_fixture(
+    "network/connectivity_report_config_cases.json"
+)
+VALID_REPORT = REPORT_CASES["valid_report"]
+
+
+def add_report(
+    configuration: dict[str, Any],
+) -> dict[str, Any]:
+    """Add valid external report configuration to a test case."""
+    return {
+        **configuration,
+        "report": VALID_REPORT,
+    }
 
 
 @pytest.mark.integration
@@ -27,33 +42,50 @@ class TestConnectivityConfigLoader:
             config.latency_thresholds_ms.warning
             < config.latency_thresholds_ms.critical
         )
+        assert config.report.title
 
     def test_loads_custom_configuration(self, tmp_path: Path) -> None:
         """Verify conversion of custom JSON into configuration models."""
+        configuration = add_report(
+            CASES["valid_custom_configuration"]
+        )
         config_path = tmp_path / "network_connectivity.json"
         config_path.write_text(
-            json.dumps(CASES["valid_custom_configuration"]),
+            json.dumps(configuration),
             encoding="utf-8",
         )
 
         config = ConnectivityConfigLoader(config_path).load()
-        expected = CASES["valid_custom_configuration"]
 
-        assert config.dns_test.hostname == expected["dns_test"]["hostname"]
-        assert config.tcp_test.host == expected["tcp_test"]["host"]
-        assert config.tcp_test.port == expected["tcp_test"]["port"]
-        assert config.connection.timeout_seconds == expected["connection"][
-            "timeout_seconds"
-        ]
+        assert (
+            config.dns_test.hostname
+            == configuration["dns_test"]["hostname"]
+        )
+        assert (
+            config.tcp_test.host
+            == configuration["tcp_test"]["host"]
+        )
+        assert (
+            config.tcp_test.port
+            == configuration["tcp_test"]["port"]
+        )
+        assert (
+            config.connection.timeout_seconds
+            == configuration["connection"]["timeout_seconds"]
+        )
+        assert config.report.title == VALID_REPORT["title"]
 
     def test_rejects_missing_required_section(
         self,
         tmp_path: Path,
     ) -> None:
         """Verify that incomplete top-level configuration is rejected."""
+        configuration = add_report(
+            CASES["missing_section_configuration"]
+        )
         config_path = tmp_path / "missing_section.json"
         config_path.write_text(
-            json.dumps(CASES["missing_section_configuration"]),
+            json.dumps(configuration),
             encoding="utf-8",
         )
 
@@ -65,9 +97,12 @@ class TestConnectivityConfigLoader:
         tmp_path: Path,
     ) -> None:
         """Verify that each required section must be a JSON object."""
+        configuration = add_report(
+            CASES["invalid_section_type_configuration"]
+        )
         config_path = tmp_path / "invalid_section.json"
         config_path.write_text(
-            json.dumps(CASES["invalid_section_type_configuration"]),
+            json.dumps(configuration),
             encoding="utf-8",
         )
 
@@ -82,9 +117,12 @@ class TestConnectivityConfigLoader:
         tmp_path: Path,
     ) -> None:
         """Verify that missing fields inside sections are rejected."""
+        configuration = add_report(
+            CASES["missing_nested_field_configuration"]
+        )
         config_path = tmp_path / "missing_field.json"
         config_path.write_text(
-            json.dumps(CASES["missing_nested_field_configuration"]),
+            json.dumps(configuration),
             encoding="utf-8",
         )
 
@@ -93,9 +131,12 @@ class TestConnectivityConfigLoader:
 
     def test_rejects_unexpected_key(self, tmp_path: Path) -> None:
         """Verify that unsupported keys cannot pass silently."""
+        configuration = add_report(
+            CASES["unexpected_key_configuration"]
+        )
         config_path = tmp_path / "unexpected_key.json"
         config_path.write_text(
-            json.dumps(CASES["unexpected_key_configuration"]),
+            json.dumps(configuration),
             encoding="utf-8",
         )
 

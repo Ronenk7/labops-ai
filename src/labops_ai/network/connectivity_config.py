@@ -25,6 +25,19 @@ def _normalize_positive_number(field_name: str, value: object) -> float:
     return normalized_value
 
 
+def _normalize_non_empty_string(field_name: str, value: object) -> str:
+    """Validate and normalize a populated string value."""
+    if not isinstance(value, str):
+        raise TypeError(f"{field_name} must be a string.")
+
+    normalized_value = value.strip()
+
+    if not normalized_value:
+        raise ValueError(f"{field_name} must not be empty.")
+
+    return normalized_value
+
+
 @dataclass(frozen=True, slots=True)
 class DnsTestConfig:
     """Represent the hostname used for DNS resolution tests."""
@@ -45,7 +58,10 @@ class DnsTestConfig:
             raise ValueError("DNS hostname must not contain whitespace.")
 
         if len(normalized_hostname) > MAX_DNS_HOSTNAME_LENGTH:
-            raise ValueError(f"DNS hostname must not exceed {MAX_DNS_HOSTNAME_LENGTH} characters.")
+            raise ValueError(
+                f"DNS hostname must not exceed "
+                f"{MAX_DNS_HOSTNAME_LENGTH} characters."
+            )
 
         object.__setattr__(self, "hostname", normalized_hostname)
 
@@ -65,13 +81,18 @@ class TcpTestConfig:
         try:
             validated_address = ip_address(self.host.strip())
         except ValueError as error:
-            raise ValueError("TCP host must be a valid IPv4 or IPv6 address.") from error
+            raise ValueError(
+                "TCP host must be a valid IPv4 or IPv6 address."
+            ) from error
 
         if isinstance(self.port, bool) or not isinstance(self.port, int):
             raise TypeError("TCP port must be an integer.")
 
         if not MIN_TCP_PORT <= self.port <= MAX_TCP_PORT:
-            raise ValueError(f"TCP port must be between {MIN_TCP_PORT} and {MAX_TCP_PORT}.")
+            raise ValueError(
+                f"TCP port must be between "
+                f"{MIN_TCP_PORT} and {MAX_TCP_PORT}."
+            )
 
         object.__setattr__(self, "host", str(validated_address))
 
@@ -84,7 +105,10 @@ class ConnectionSettings:
 
     def __post_init__(self) -> None:
         """Validate and normalize the connection timeout."""
-        normalized_timeout = _normalize_positive_number("Connection timeout", self.timeout_seconds)
+        normalized_timeout = _normalize_positive_number(
+            "Connection timeout",
+            self.timeout_seconds,
+        )
         object.__setattr__(self, "timeout_seconds", normalized_timeout)
 
 
@@ -97,8 +121,14 @@ class LatencyThresholds:
 
     def __post_init__(self) -> None:
         """Validate and normalize latency threshold values."""
-        normalized_warning = _normalize_positive_number("Warning latency threshold", self.warning)
-        normalized_critical = _normalize_positive_number("Critical latency threshold", self.critical)
+        normalized_warning = _normalize_positive_number(
+            "Warning latency threshold",
+            self.warning,
+        )
+        normalized_critical = _normalize_positive_number(
+            "Critical latency threshold",
+            self.critical,
+        )
 
         if normalized_warning >= normalized_critical:
             raise ValueError(
@@ -111,6 +141,46 @@ class LatencyThresholds:
 
 
 @dataclass(frozen=True, slots=True)
+class NetworkReportConfig:
+    """Represent external text used in network connectivity reports."""
+
+    title: str
+    separator: str
+    overall_label: str
+    dns_label: str
+    tcp_label: str
+    target_label: str
+    latency_label: str
+    latency_unit: str
+    resolved_address_label: str
+    failure_reason_label: str
+    error_message_label: str
+
+    def __post_init__(self) -> None:
+        """Validate and normalize every report text field."""
+        field_labels = {
+            "title": "Report title",
+            "separator": "Report separator",
+            "overall_label": "Overall status label",
+            "dns_label": "DNS label",
+            "tcp_label": "TCP label",
+            "target_label": "Target label",
+            "latency_label": "Latency label",
+            "latency_unit": "Latency unit",
+            "resolved_address_label": "Resolved address label",
+            "failure_reason_label": "Failure reason label",
+            "error_message_label": "Error message label",
+        }
+
+        for field_name, field_label in field_labels.items():
+            normalized_value = _normalize_non_empty_string(
+                field_label,
+                getattr(self, field_name),
+            )
+            object.__setattr__(self, field_name, normalized_value)
+
+
+@dataclass(frozen=True, slots=True)
 class ConnectivityConfig:
     """Group all configuration required for connectivity monitoring."""
 
@@ -118,6 +188,7 @@ class ConnectivityConfig:
     tcp_test: TcpTestConfig
     connection: ConnectionSettings
     latency_thresholds_ms: LatencyThresholds
+    report: NetworkReportConfig
 
     def __post_init__(self) -> None:
         """Verify that every field contains its expected model type."""
@@ -126,8 +197,12 @@ class ConnectivityConfig:
             "tcp_test": TcpTestConfig,
             "connection": ConnectionSettings,
             "latency_thresholds_ms": LatencyThresholds,
+            "report": NetworkReportConfig,
         }
 
         for field_name, expected_type in expected_types.items():
             if not isinstance(getattr(self, field_name), expected_type):
-                raise TypeError(f"{field_name} must be an instance of {expected_type.__name__}.")
+                raise TypeError(
+                    f"{field_name} must be an instance of "
+                    f"{expected_type.__name__}."
+                )
