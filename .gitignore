@@ -5,17 +5,25 @@
 __pycache__/
 *.py[cod]
 
-# Environment variables and secrets
-.env
-
-# Test and coverage files
+# Python test and coverage files
 .pytest_cache/
 .coverage
+coverage.xml
 htmlcov/
 
+# Environment variables and secrets
+.env
+.env.*
+
 # IDE settings
-.vscode/
 .idea/
+.vscode/
+
+# Private local documentation
+private_docs/
+
+# Log files
+*.log
 
 # Operating system files
 .DS_Store

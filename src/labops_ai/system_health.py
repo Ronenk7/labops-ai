@@ -1,74 +1,194 @@
+"""Collect and evaluate Linux system health metrics."""
+
 from __future__ import annotations
+
+from dataclasses import dataclass
+from enum import StrEnum
+
 import psutil
 
-
-WARNING_THRESHOLD = 70.0
-CRITICAL_THRESHOLD = 90.0
-
-
-def collect_system_health() -> dict[str, float]:
-    """Collect basic health metrics from the Linux system."""
-    memory = psutil.virtual_memory()
-    disk = psutil.disk_usage("/")
-
-    return {
-        "cpu_percent": psutil.cpu_percent(interval=1),
-        "memory_percent": memory.percent,
-        "disk_percent": disk.percent,
-    }
+from labops_ai.config import (
+    HealthThresholdLoader,
+    HealthThresholds,
+)
 
 
-def evaluate_metric(value: float) -> str:
-    """Return the health status for a metric value."""
-    if value >= CRITICAL_THRESHOLD:
-        return "CRITICAL"
+class HealthStatus(StrEnum):
+    """Define the supported system health severity levels."""
 
-    if value >= WARNING_THRESHOLD:
-        return "WARNING"
-
-    return "HEALTHY"
+    HEALTHY = "HEALTHY"
+    WARNING = "WARNING"
+    CRITICAL = "CRITICAL"
 
 
-def evaluate_system_health(metrics: dict[str, float]) -> dict[str, str]:
-    """Evaluate all collected system metrics."""
-    return {
-        metric_name: evaluate_metric(value)
-        for metric_name, value in metrics.items()
-    }
+MetricValues = dict[str, float]
+MetricStatuses = dict[str, HealthStatus]
 
 
-def get_overall_status(statuses: dict[str, str]) -> str:
-    """Return the most severe status found in the system."""
-    if "CRITICAL" in statuses.values():
-        return "CRITICAL"
+@dataclass(frozen=True, slots=True)
+class SystemHealthMonitor:
+    """
+    Collect and evaluate system utilization metrics.
 
-    if "WARNING" in statuses.values():
-        return "WARNING"
+    The monitor receives its thresholds through dependency injection
+    instead of containing hard-coded warning and critical values.
 
-    return "HEALTHY"
+    Attributes:
+        thresholds:
+            Validated thresholds used when classifying metrics.
+    """
+
+    thresholds: HealthThresholds
+
+    def collect_system_health(self) -> MetricValues:
+        """
+        Collect basic utilization metrics from the Linux system.
+
+        Returns:
+            A dictionary containing CPU, memory, and disk usage
+            percentages.
+        """
+        memory = psutil.virtual_memory()
+        disk = psutil.disk_usage("/")
+
+        return {
+            "cpu_percent": psutil.cpu_percent(interval=1),
+            "memory_percent": memory.percent,
+            "disk_percent": disk.percent,
+        }
+
+    def evaluate_metric(
+        self,
+        value: float,
+    ) -> HealthStatus:
+        """
+        Classify one utilization metric by severity.
+
+        Args:
+            value:
+                Metric utilization percentage.
+
+        Returns:
+            CRITICAL when the value reaches the critical threshold,
+            WARNING when it reaches the warning threshold,
+            otherwise HEALTHY.
+        """
+        if value >= self.thresholds.critical:
+            return HealthStatus.CRITICAL
+
+        if value >= self.thresholds.warning:
+            return HealthStatus.WARNING
+
+        return HealthStatus.HEALTHY
+
+    def evaluate_system_health(
+        self,
+        metrics: MetricValues,
+    ) -> MetricStatuses:
+        """
+        Classify every collected system metric.
+
+        Args:
+            metrics:
+                Mapping between metric names and percentage values.
+
+        Returns:
+            A new dictionary containing one HealthStatus for every
+            supplied metric.
+        """
+        return {
+            metric_name: self.evaluate_metric(metric_value)
+            for metric_name, metric_value in metrics.items()
+        }
+
+    @staticmethod
+    def get_overall_status(
+        statuses: MetricStatuses,
+    ) -> HealthStatus:
+        """
+        Return the most severe status found in the system.
+
+        Args:
+            statuses:
+                Mapping between metric names and their statuses.
+
+        Returns:
+            CRITICAL when at least one metric is critical,
+            WARNING when at least one metric is warning,
+            otherwise HEALTHY.
+        """
+        if HealthStatus.CRITICAL in statuses.values():
+            return HealthStatus.CRITICAL
+
+        if HealthStatus.WARNING in statuses.values():
+            return HealthStatus.WARNING
+
+        return HealthStatus.HEALTHY
 
 
-def main() -> None:
-    metrics = collect_system_health()
-    statuses = evaluate_system_health(metrics)
-    overall_status = get_overall_status(statuses)
+def print_health_report(
+    metrics: MetricValues,
+    statuses: MetricStatuses,
+    overall_status: HealthStatus,
+) -> None:
+    """
+    Print the collected metrics and evaluated statuses.
 
+    Args:
+        metrics:
+            Raw utilization percentages.
+
+        statuses:
+            Evaluated status for every metric.
+
+        overall_status:
+            Most severe status found in the system.
+    """
     print("LabOps AI - System Health")
     print("-------------------------")
+
     print(
         f"CPU usage:    {metrics['cpu_percent']:.1f}% "
         f"[{statuses['cpu_percent']}]"
     )
+
     print(
         f"Memory usage: {metrics['memory_percent']:.1f}% "
         f"[{statuses['memory_percent']}]"
     )
+
     print(
         f"Disk usage:   {metrics['disk_percent']:.1f}% "
         f"[{statuses['disk_percent']}]"
     )
+
     print("-------------------------")
     print(f"Overall status: {overall_status}")
+
+
+def main() -> None:
+    """Load configuration, evaluate the system, and print a report."""
+    thresholds = HealthThresholdLoader().load()
+
+    monitor = SystemHealthMonitor(
+        thresholds=thresholds,
+    )
+
+    metrics = monitor.collect_system_health()
+
+    statuses = monitor.evaluate_system_health(
+        metrics
+    )
+
+    overall_status = monitor.get_overall_status(
+        statuses
+    )
+
+    print_health_report(
+        metrics=metrics,
+        statuses=statuses,
+        overall_status=overall_status,
+    )
 
 
 if __name__ == "__main__":
