@@ -185,4 +185,4 @@ class TestHealthThresholds:
         )
 
         with pytest.raises(FrozenInstanceError):
-            thresholds.warning = 75.0  # type: ignore[misc]
+            setattr(thresholds, "warning", 75.0)

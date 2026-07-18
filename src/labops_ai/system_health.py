@@ -1,195 +1,188 @@
-"""Collect and evaluate Linux system health metrics."""
+"""Unit tests for the HealthThresholds configuration model."""
 
-from __future__ import annotations
+from dataclasses import FrozenInstanceError
 
-from dataclasses import dataclass
-from enum import StrEnum
+import pytest
 
-import psutil
-
-from labops_ai.config import (
-    HealthThresholdLoader,
+from labops_ai.config.health_thresholds import (
     HealthThresholds,
 )
 
 
-class HealthStatus(StrEnum):
-    """Define the supported system health severity levels."""
+@pytest.mark.unit
+class TestHealthThresholds:
+    """Verify validation and immutability of threshold objects."""
 
-    HEALTHY = "HEALTHY"
-    WARNING = "WARNING"
-    CRITICAL = "CRITICAL"
-
-
-MetricValues = dict[str, float]
-MetricStatuses = dict[str, HealthStatus]
-
-
-@dataclass(frozen=True, slots=True)
-class SystemHealthMonitor:
-    """
-    Collect and evaluate system utilization metrics.
-
-    The monitor receives its thresholds through dependency injection
-    instead of containing hard-coded warning and critical values.
-
-    Attributes:
-        thresholds:
-            Validated thresholds used when classifying metrics.
-    """
-
-    thresholds: HealthThresholds
-
-    def collect_system_health(self) -> MetricValues:
-        """
-        Collect basic utilization metrics from the Linux system.
-
-        Returns:
-            A dictionary containing CPU, memory, and disk usage
-            percentages.
-        """
-        memory = psutil.virtual_memory()
-        disk = psutil.disk_usage("/")
-
-        return {
-            "cpu_percent": psutil.cpu_percent(interval=1),
-            "memory_percent": memory.percent,
-            "disk_percent": disk.percent,
-        }
-
-    def evaluate_metric(
+    @pytest.mark.parametrize(
+        ("warning", "critical"),
+        [
+            pytest.param(
+                0.0,
+                1.0,
+                id="minimum-valid-range",
+            ),
+            pytest.param(
+                25.5,
+                75.5,
+                id="valid-decimal-values",
+            ),
+            pytest.param(
+                99.0,
+                100.0,
+                id="maximum-valid-range",
+            ),
+        ],
+    )
+    def test_accepts_valid_thresholds(
         self,
-        value: float,
-    ) -> HealthStatus:
+        warning: float,
+        critical: float,
+    ) -> None:
         """
-        Classify one utilization metric by severity.
+        Verify that valid percentage ranges create an object.
 
-        Args:
-            value:
-                Metric utilization percentage.
-
-        Returns:
-            CRITICAL when the value reaches the critical threshold,
-            WARNING when it reaches the warning threshold,
-            otherwise HEALTHY.
+        A valid configuration contains numeric percentage values
+        between zero and one hundred, where warning is lower than
+        critical.
         """
-        if value >= self.thresholds.critical:
-            return HealthStatus.CRITICAL
+        thresholds = HealthThresholds(
+            warning=warning,
+            critical=critical,
+        )
 
-        if value >= self.thresholds.warning:
-            return HealthStatus.WARNING
+        assert thresholds.warning == float(warning)
+        assert thresholds.critical == float(critical)
 
-        return HealthStatus.HEALTHY
-
-    def evaluate_system_health(
+    @pytest.mark.parametrize(
+        ("warning", "critical"),
+        [
+            pytest.param(
+                -1.0,
+                90.0,
+                id="warning-below-zero",
+            ),
+            pytest.param(
+                70.0,
+                101.0,
+                id="critical-above-one-hundred",
+            ),
+            pytest.param(
+                70.0,
+                -1.0,
+                id="critical-below-zero",
+            ),
+            pytest.param(
+                101.0,
+                102.0,
+                id="warning-above-one-hundred",
+            ),
+        ],
+    )
+    def test_rejects_values_outside_percentage_range(
         self,
-        metrics: MetricValues,
-    ) -> MetricStatuses:
+        warning: float,
+        critical: float,
+    ) -> None:
         """
-        Classify every collected system metric.
+        Verify that percentages outside zero to one hundred fail.
 
-        Args:
-            metrics:
-                Mapping between metric names and percentage values.
-
-        Returns:
-            A new dictionary containing one HealthStatus for every
-            supplied metric.
+        Invalid values must be rejected immediately so that the
+        monitoring logic never receives an unusable configuration.
         """
-        return {
-            metric_name: self.evaluate_metric(metric_value)
-            for metric_name, metric_value in metrics.items()
-        }
+        with pytest.raises(ValueError):
+            HealthThresholds(
+                warning=warning,
+                critical=critical,
+            )
 
-    @staticmethod
-    def get_overall_status(
-        statuses: MetricStatuses,
-    ) -> HealthStatus:
+    @pytest.mark.parametrize(
+        ("warning", "critical"),
+        [
+            pytest.param(
+                70.0,
+                70.0,
+                id="equal-thresholds",
+            ),
+            pytest.param(
+                90.0,
+                70.0,
+                id="warning-above-critical",
+            ),
+        ],
+    )
+    def test_rejects_invalid_threshold_order(
+        self,
+        warning: float,
+        critical: float,
+    ) -> None:
         """
-        Return the most severe status found in the system.
+        Verify that warning must remain lower than critical.
 
-        Args:
-            statuses:
-                Mapping between metric names and their statuses.
-
-        Returns:
-            CRITICAL when at least one metric is critical,
-            WARNING when at least one metric is warning,
-            otherwise HEALTHY.
+        Equal or reversed thresholds would make status evaluation
+        logically ambiguous.
         """
-        if HealthStatus.CRITICAL in statuses.values():
-            return HealthStatus.CRITICAL
+        with pytest.raises(
+            ValueError,
+            match="Warning threshold must be lower",
+        ):
+            HealthThresholds(
+                warning=warning,
+                critical=critical,
+            )
 
-        if HealthStatus.WARNING in statuses.values():
-            return HealthStatus.WARNING
-
-        return HealthStatus.HEALTHY
-
-
-def print_health_report(
-    metrics: MetricValues,
-    statuses: MetricStatuses,
-    overall_status: HealthStatus,
-) -> None:
-    """
-    Print the collected metrics and evaluated statuses.
-
-    Args:
-        metrics:
-            Raw utilization percentages.
-
-        statuses:
-            Evaluated status for every metric.
-
-        overall_status:
-            Most severe status found in the system.
-    """
-    print("LabOps AI - System Health")
-    print("-------------------------")
-
-    print(
-        f"CPU usage:    {metrics['cpu_percent']:.1f}% "
-        f"[{statuses['cpu_percent']}]"
+    @pytest.mark.parametrize(
+        ("warning", "critical"),
+        [
+            pytest.param(
+                "70",
+                90.0,
+                id="warning-is-string",
+            ),
+            pytest.param(
+                70.0,
+                "90",
+                id="critical-is-string",
+            ),
+            pytest.param(
+                True,
+                90.0,
+                id="warning-is-boolean",
+            ),
+            pytest.param(
+                70.0,
+                False,
+                id="critical-is-boolean",
+            ),
+        ],
     )
+    def test_rejects_non_numeric_thresholds(
+        self,
+        warning: object,
+        critical: object,
+    ) -> None:
+        """
+        Verify that threshold fields accept only numeric values.
 
-    print(
-        f"Memory usage: {metrics['memory_percent']:.1f}% "
-        f"[{statuses['memory_percent']}]"
-    )
+        Strings and Boolean values must not be silently converted
+        into percentages.
+        """
+        with pytest.raises(TypeError):
+            HealthThresholds(
+                warning=warning,  # type: ignore[arg-type]
+                critical=critical,  # type: ignore[arg-type]
+            )
 
-    print(
-        f"Disk usage:   {metrics['disk_percent']:.1f}% "
-        f"[{statuses['disk_percent']}]"
-    )
+    def test_thresholds_are_immutable(self) -> None:
+        """
+        Verify that configuration cannot change after creation.
 
-    print("-------------------------")
-    print(f"Overall status: {overall_status}")
+        Runtime threshold changes must happen through a new validated
+        configuration object rather than accidental field mutation.
+        """
+        thresholds = HealthThresholds(
+            warning=70.0,
+            critical=90.0,
+        )
 
-
-def main() -> None:
-    """Load configuration, evaluate the system, and print a report."""
-    thresholds = HealthThresholdLoader().load()
-
-    monitor = SystemHealthMonitor(
-        thresholds=thresholds,
-    )
-
-    metrics = monitor.collect_system_health()
-
-    statuses = monitor.evaluate_system_health(
-        metrics
-    )
-
-    overall_status = monitor.get_overall_status(
-        statuses
-    )
-
-    print_health_report(
-        metrics=metrics,
-        statuses=statuses,
-        overall_status=overall_status,
-    )
-
-
-if __name__ == "__main__":
-    main()
+        with pytest.raises(FrozenInstanceError):
+            setattr(thresholds, "warning", 75.0)
