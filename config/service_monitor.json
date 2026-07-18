@@ -1,0 +1,29 @@
+{
+  "command": {
+    "executable": "systemctl",
+    "timeout_seconds": 5.0
+  },
+  "services": [
+    {
+      "service_name": "systemd-journald.service",
+      "label": "System Journal"
+    },
+    {
+      "service_name": "dbus.service",
+      "label": "D-Bus System Bus"
+    }
+  ],
+  "report": {
+    "title": "LabOps AI - Service Health",
+    "separator": "---------------------------",
+    "overall_label": "Overall status",
+    "service_label": "Service",
+    "unit_label": "Unit",
+    "health_label": "Health",
+    "load_state_label": "Load state",
+    "active_state_label": "Active state",
+    "sub_state_label": "Sub state",
+    "failure_reason_label": "Failure reason",
+    "error_message_label": "Error"
+  }
+}

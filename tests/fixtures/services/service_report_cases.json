@@ -1,0 +1,16 @@
+{
+  "report": {
+    "title": "LabOps AI - Service Health",
+    "separator": "---------------------------",
+    "overall_label": "Overall status",
+    "service_label": "Service",
+    "unit_label": "Unit",
+    "health_label": "Health",
+    "load_state_label": "Load state",
+    "active_state_label": "Active state",
+    "sub_state_label": "Sub state",
+    "failure_reason_label": "Failure reason",
+    "error_message_label": "Error"
+  },
+  "expected_report": "LabOps AI - Service Health\n---------------------------\nService: Cron Scheduler\nUnit: cron.service\nHealth: HEALTHY\nLoad state: loaded\nActive state: active\nSub state: running\n\nService: SSH Server\nUnit: ssh.service\nHealth: CRITICAL\nLoad state: loaded\nActive state: failed\nSub state: failed\n---------------------------\nOverall status: CRITICAL"
+}

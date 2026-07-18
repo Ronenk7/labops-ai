@@ -1,0 +1,73 @@
+{
+  "valid_target": {
+    "service_name": "cron.service",
+    "label": "Cron Scheduler"
+  },
+  "normalized_target": {
+    "service_name": "  cron.service  ",
+    "label": "  Cron Scheduler  "
+  },
+  "invalid_service_names": [
+    {
+      "case_id": "empty-name",
+      "service_name": ""
+    },
+    {
+      "case_id": "whitespace-name",
+      "service_name": "   "
+    },
+    {
+      "case_id": "contains-whitespace",
+      "service_name": "cron scheduler.service"
+    },
+    {
+      "case_id": "wrong-unit-type",
+      "service_name": "cron.timer"
+    }
+  ],
+  "valid_command": {
+    "executable": "systemctl",
+    "timeout_seconds": 5.0
+  },
+  "invalid_timeouts": [
+    {
+      "case_id": "zero-timeout",
+      "value": 0
+    },
+    {
+      "case_id": "negative-timeout",
+      "value": -1
+    },
+    {
+      "case_id": "string-timeout",
+      "value": "5"
+    },
+    {
+      "case_id": "boolean-timeout",
+      "value": true
+    }
+  ],
+  "valid_report": {
+    "title": "LabOps AI - Service Health",
+    "separator": "---------------------------",
+    "overall_label": "Overall status",
+    "service_label": "Service",
+    "unit_label": "Unit",
+    "health_label": "Health",
+    "load_state_label": "Load state",
+    "active_state_label": "Active state",
+    "sub_state_label": "Sub state",
+    "failure_reason_label": "Failure reason",
+    "error_message_label": "Error"
+  },
+  "valid_services": [
+    {
+      "service_name": "cron.service",
+      "label": "Cron Scheduler"
+    },
+    {
+      "service_name": "ssh.service",
+      "label": "SSH Server"
+    }
+  ]
+}

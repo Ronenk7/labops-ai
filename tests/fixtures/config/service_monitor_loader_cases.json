@@ -1,0 +1,33 @@
+{
+  "valid_configuration": {
+    "command": {
+      "executable": "systemctl",
+      "timeout_seconds": 4.0
+    },
+    "services": [
+      {
+        "service_name": "cron.service",
+        "label": "Cron Scheduler"
+      },
+      {
+        "service_name": "ssh.service",
+        "label": "SSH Server"
+      }
+    ],
+    "report": {
+      "title": "LabOps AI - Service Health",
+      "separator": "---------------------------",
+      "overall_label": "Overall status",
+      "service_label": "Service",
+      "unit_label": "Unit",
+      "health_label": "Health",
+      "load_state_label": "Load state",
+      "active_state_label": "Active state",
+      "sub_state_label": "Sub state",
+      "failure_reason_label": "Failure reason",
+      "error_message_label": "Error"
+    }
+  },
+  "invalid_json_text": "{\"command\":",
+  "missing_file_name": "missing_service_monitor.json"
+}

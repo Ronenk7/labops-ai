@@ -1,0 +1,30 @@
+{
+  "services": [
+    {
+      "service_name": "cron.service",
+      "label": "Cron Scheduler"
+    },
+    {
+      "service_name": "ssh.service",
+      "label": "SSH Server"
+    }
+  ],
+  "active_result": {
+    "status": "ACTIVE",
+    "load_state": "loaded",
+    "active_state": "active",
+    "sub_state": "running"
+  },
+  "transitioning_result": {
+    "status": "TRANSITIONING",
+    "load_state": "loaded",
+    "active_state": "activating",
+    "sub_state": "start"
+  },
+  "failed_result": {
+    "status": "FAILED",
+    "load_state": "loaded",
+    "active_state": "failed",
+    "sub_state": "failed"
+  }
+}

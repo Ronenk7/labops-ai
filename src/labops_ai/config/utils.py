@@ -7,8 +7,10 @@ from typing import Any
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 CONFIG_DIRECTORY = PROJECT_ROOT / "config"
-SYSTEM_HEALTH_CONFIG_PATH = (CONFIG_DIRECTORY / "system_health.json")
-NETWORK_CONNECTIVITY_CONFIG_PATH = (CONFIG_DIRECTORY / "network_connectivity.json")
+
+SYSTEM_HEALTH_CONFIG_PATH = CONFIG_DIRECTORY / "system_health.json"
+NETWORK_CONNECTIVITY_CONFIG_PATH = CONFIG_DIRECTORY / "network_connectivity.json"
+SERVICE_MONITOR_CONFIG_PATH = CONFIG_DIRECTORY / "service_monitor.json"
 
 
 def load_json_config(config_path: str | Path) -> dict[str, Any]:
@@ -38,16 +40,24 @@ def load_json_config(config_path: str | Path) -> dict[str, Any]:
     try:
         raw_content = path.read_text(encoding="utf-8")
     except FileNotFoundError as error:
-        raise FileNotFoundError(f"Configuration file was not found: {path}") from error
+        raise FileNotFoundError(
+            f"Configuration file was not found: {path}"
+        ) from error
     except IsADirectoryError as error:
-        raise IsADirectoryError(f"Configuration path points to a directory: {path}") from error
+        raise IsADirectoryError(
+            f"Configuration path points to a directory: {path}"
+        ) from error
 
     try:
         configuration = json.loads(raw_content)
     except json.JSONDecodeError as error:
-        raise ValueError(f"Configuration file contains invalid JSON: {path}") from error
+        raise ValueError(
+            f"Configuration file contains invalid JSON: {path}"
+        ) from error
 
     if not isinstance(configuration, dict):
-        raise ValueError("Configuration file must contain a JSON object.")
+        raise ValueError(
+            "Configuration file must contain a JSON object."
+        )
 
     return configuration
