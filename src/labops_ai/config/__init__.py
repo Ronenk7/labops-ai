@@ -1,9 +1,19 @@
 """Configuration models and loaders for LabOps AI."""
+from labops_ai.config.system_health_config import (
+    SUPPORTED_SYSTEM_METRICS,
+    HealthThresholds,
+    SystemHealthCollectionConfig,
+    SystemHealthConfig,
+    SystemHealthReportConfig,
+)
+from labops_ai.config.system_health_loader import SystemHealthConfigLoader
 
-from labops_ai.config.health_thresholds import HealthThresholds
-from labops_ai.config.threshold_loader import HealthThresholdLoader
 
 __all__ = [
-    "HealthThresholdLoader",
+    "SUPPORTED_SYSTEM_METRICS",
     "HealthThresholds",
+    "SystemHealthCollectionConfig",
+    "SystemHealthConfig",
+    "SystemHealthConfigLoader",
+    "SystemHealthReportConfig",
 ]

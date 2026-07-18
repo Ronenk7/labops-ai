@@ -1,0 +1,30 @@
+{
+  "collection": {
+    "cpu_sample_interval_seconds": 1.0,
+    "disk_mount_point": "/"
+  },
+  "metrics": {
+    "cpu_percent": {
+      "warning": 70.0,
+      "critical": 90.0
+    },
+    "memory_percent": {
+      "warning": 75.0,
+      "critical": 90.0
+    },
+    "disk_percent": {
+      "warning": 80.0,
+      "critical": 95.0
+    }
+  },
+  "report": {
+    "title": "LabOps AI - System Health",
+    "separator": "-------------------------",
+    "overall_label": "Overall status",
+    "metric_labels": {
+      "cpu_percent": "CPU usage",
+      "memory_percent": "Memory usage",
+      "disk_percent": "Disk usage"
+    }
+  }
+}

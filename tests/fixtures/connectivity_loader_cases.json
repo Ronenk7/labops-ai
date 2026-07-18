@@ -1,0 +1,78 @@
+{
+  "valid_custom_configuration": {
+    "dns_test": {
+      "hostname": "www.google.com"
+    },
+    "tcp_test": {
+      "host": "8.8.8.8",
+      "port": 53
+    },
+    "connection": {
+      "timeout_seconds": 5.0
+    },
+    "latency_thresholds_ms": {
+      "warning": 300.0,
+      "critical": 1200.0
+    }
+  },
+  "missing_section_configuration": {
+    "dns_test": {
+      "hostname": "www.google.com"
+    },
+    "tcp_test": {
+      "host": "8.8.8.8",
+      "port": 53
+    },
+    "connection": {
+      "timeout_seconds": 5.0
+    }
+  },
+  "invalid_section_type_configuration": {
+    "dns_test": "invalid",
+    "tcp_test": {
+      "host": "8.8.8.8",
+      "port": 53
+    },
+    "connection": {
+      "timeout_seconds": 5.0
+    },
+    "latency_thresholds_ms": {
+      "warning": 300.0,
+      "critical": 1200.0
+    }
+  },
+  "missing_nested_field_configuration": {
+    "dns_test": {
+      "hostname": "www.google.com"
+    },
+    "tcp_test": {
+      "host": "8.8.8.8"
+    },
+    "connection": {
+      "timeout_seconds": 5.0
+    },
+    "latency_thresholds_ms": {
+      "warning": 300.0,
+      "critical": 1200.0
+    }
+  },
+  "unexpected_key_configuration": {
+    "dns_test": {
+      "hostname": "www.google.com"
+    },
+    "tcp_test": {
+      "host": "8.8.8.8",
+      "port": 53
+    },
+    "connection": {
+      "timeout_seconds": 5.0
+    },
+    "latency_thresholds_ms": {
+      "warning": 300.0,
+      "critical": 1200.0
+    },
+    "unexpected": true
+  },
+  "invalid_json_text": "{\"dns_test\":",
+  "missing_file_name": "missing_connectivity.json"
+}

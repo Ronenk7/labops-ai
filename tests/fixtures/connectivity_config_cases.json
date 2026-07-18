@@ -1,0 +1,200 @@
+{
+  "valid_configuration": {
+    "dns_test": {
+      "hostname": "www.cloudflare.com"
+    },
+    "tcp_test": {
+      "host": "1.1.1.1",
+      "port": 443
+    },
+    "connection": {
+      "timeout_seconds": 3.0
+    },
+    "latency_thresholds_ms": {
+      "warning": 250.0,
+      "critical": 1000.0
+    }
+  },
+  "dns_normalization": {
+    "input": "  www.cloudflare.com  ",
+    "expected": "www.cloudflare.com"
+  },
+  "invalid_hostnames": [
+    {
+      "id": "empty-hostname",
+      "value": ""
+    },
+    {
+      "id": "whitespace-only-hostname",
+      "value": "   "
+    },
+    {
+      "id": "hostname-containing-whitespace",
+      "value": "www.cloudflare .com"
+    },
+    {
+      "id": "hostname-exceeds-maximum-length",
+      "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    }
+  ],
+  "invalid_hostname_types": [
+    {
+      "id": "hostname-is-integer",
+      "value": 123
+    },
+    {
+      "id": "hostname-is-boolean",
+      "value": true
+    },
+    {
+      "id": "hostname-is-null",
+      "value": null
+    }
+  ],
+  "valid_ip_addresses": [
+    {
+      "id": "valid-ipv4-address",
+      "input": "1.1.1.1",
+      "expected": "1.1.1.1"
+    },
+    {
+      "id": "ipv4-with-surrounding-whitespace",
+      "input": "  1.1.1.1  ",
+      "expected": "1.1.1.1"
+    },
+    {
+      "id": "valid-ipv6-address",
+      "input": "2001:4860:4860::8888",
+      "expected": "2001:4860:4860::8888"
+    }
+  ],
+  "invalid_ip_addresses": [
+    {
+      "id": "empty-host",
+      "value": ""
+    },
+    {
+      "id": "hostname-instead-of-ip-address",
+      "value": "cloudflare.com"
+    },
+    {
+      "id": "invalid-ipv4-address",
+      "value": "999.999.999.999"
+    },
+    {
+      "id": "incomplete-ipv4-address",
+      "value": "1.1.1"
+    }
+  ],
+  "invalid_host_types": [
+    {
+      "id": "host-is-integer",
+      "value": 123
+    },
+    {
+      "id": "host-is-boolean",
+      "value": true
+    },
+    {
+      "id": "host-is-null",
+      "value": null
+    }
+  ],
+  "valid_port": 443,
+  "invalid_ports": [
+    {
+      "id": "port-below-valid-range",
+      "value": 0
+    },
+    {
+      "id": "port-above-valid-range",
+      "value": 65536
+    },
+    {
+      "id": "negative-port",
+      "value": -1
+    }
+  ],
+  "invalid_port_types": [
+    {
+      "id": "port-is-string",
+      "value": "443"
+    },
+    {
+      "id": "port-is-float",
+      "value": 443.0
+    },
+    {
+      "id": "port-is-boolean",
+      "value": true
+    },
+    {
+      "id": "port-is-null",
+      "value": null
+    }
+  ],
+  "valid_connection_timeout": {
+    "input": 5,
+    "expected": 5.0
+  },
+  "invalid_connection_timeouts": [
+    {
+      "id": "zero-timeout",
+      "value": 0.0
+    },
+    {
+      "id": "negative-timeout",
+      "value": -1.0
+    },
+    {
+      "id": "string-timeout",
+      "value": "3.0"
+    },
+    {
+      "id": "boolean-timeout",
+      "value": true
+    },
+    {
+      "id": "null-timeout",
+      "value": null
+    }
+  ],
+  "valid_latency_thresholds": {
+    "warning": 250,
+    "critical": 1000
+  },
+  "invalid_latency_order": [
+    {
+      "id": "equal-latency-thresholds",
+      "warning": 250.0,
+      "critical": 250.0
+    },
+    {
+      "id": "warning-above-critical-latency",
+      "warning": 1000.0,
+      "critical": 250.0
+    }
+  ],
+  "invalid_latency_values": [
+    {
+      "id": "zero-warning-latency",
+      "warning": 0.0,
+      "critical": 1000.0
+    },
+    {
+      "id": "negative-critical-latency",
+      "warning": 250.0,
+      "critical": -1.0
+    },
+    {
+      "id": "string-warning-latency",
+      "warning": "250",
+      "critical": 1000.0
+    },
+    {
+      "id": "boolean-critical-latency",
+      "warning": 250.0,
+      "critical": true
+    }
+  ]
+}

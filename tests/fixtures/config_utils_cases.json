@@ -1,0 +1,10 @@
+{
+  "valid_object": {
+    "name": "external-test-configuration",
+    "enabled": true,
+    "retry_count": 3
+  },
+  "invalid_json_text": "{\"name\":",
+  "non_object_json_text": "[1, 2, 3]",
+  "missing_file_name": "missing_configuration.json"
+}

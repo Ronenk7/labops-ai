@@ -1,3 +1,1 @@
-"""LabOps AI monitoring and diagnostics package."""
-
-__version__ = "0.1.0"
+"""LabOps AI monitoring and automation package."""

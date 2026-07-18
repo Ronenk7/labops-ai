@@ -1,0 +1,124 @@
+{
+  "config": {
+    "collection": {
+      "cpu_sample_interval_seconds": 2.5,
+      "disk_mount_point": "/test-mount"
+    },
+    "metrics": {
+      "cpu_percent": {
+        "warning": 60.0,
+        "critical": 85.0
+      },
+      "memory_percent": {
+        "warning": 70.0,
+        "critical": 90.0
+      },
+      "disk_percent": {
+        "warning": 80.0,
+        "critical": 95.0
+      }
+    },
+    "report": {
+      "title": "External System Health Report",
+      "separator": "------------------------------",
+      "overall_label": "External overall status",
+      "metric_labels": {
+        "cpu_percent": "External CPU usage",
+        "memory_percent": "External memory usage",
+        "disk_percent": "External disk usage"
+      }
+    }
+  },
+  "collection_result": {
+    "cpu_percent": 42.5,
+    "memory_percent": 55.5,
+    "disk_percent": 66.5
+  },
+  "metric_status_cases": [
+    {
+      "id": "cpu-below-warning",
+      "metric_name": "cpu_percent",
+      "value": 59.9,
+      "expected": "HEALTHY"
+    },
+    {
+      "id": "cpu-at-warning",
+      "metric_name": "cpu_percent",
+      "value": 60.0,
+      "expected": "WARNING"
+    },
+    {
+      "id": "cpu-at-critical",
+      "metric_name": "cpu_percent",
+      "value": 85.0,
+      "expected": "CRITICAL"
+    },
+    {
+      "id": "memory-between-thresholds",
+      "metric_name": "memory_percent",
+      "value": 80.0,
+      "expected": "WARNING"
+    },
+    {
+      "id": "disk-above-critical",
+      "metric_name": "disk_percent",
+      "value": 99.0,
+      "expected": "CRITICAL"
+    }
+  ],
+  "system_health_case": {
+    "metrics": {
+      "cpu_percent": 50.0,
+      "memory_percent": 75.0,
+      "disk_percent": 96.0
+    },
+    "expected_statuses": {
+      "cpu_percent": "HEALTHY",
+      "memory_percent": "WARNING",
+      "disk_percent": "CRITICAL"
+    }
+  },
+  "overall_status_cases": [
+    {
+      "id": "all-metrics-healthy",
+      "statuses": {
+        "cpu_percent": "HEALTHY",
+        "memory_percent": "HEALTHY",
+        "disk_percent": "HEALTHY"
+      },
+      "expected": "HEALTHY"
+    },
+    {
+      "id": "one-warning-metric",
+      "statuses": {
+        "cpu_percent": "HEALTHY",
+        "memory_percent": "WARNING",
+        "disk_percent": "HEALTHY"
+      },
+      "expected": "WARNING"
+    },
+    {
+      "id": "one-critical-metric",
+      "statuses": {
+        "cpu_percent": "WARNING",
+        "memory_percent": "CRITICAL",
+        "disk_percent": "HEALTHY"
+      },
+      "expected": "CRITICAL"
+    }
+  ],
+  "report_case": {
+    "metrics": {
+      "cpu_percent": 50.0,
+      "memory_percent": 75.0,
+      "disk_percent": 96.0
+    },
+    "statuses": {
+      "cpu_percent": "HEALTHY",
+      "memory_percent": "WARNING",
+      "disk_percent": "CRITICAL"
+    },
+    "overall_status": "CRITICAL",
+    "expected_output": "External System Health Report\n------------------------------\nExternal CPU usage: 50.0% [HEALTHY]\nExternal memory usage: 75.0% [WARNING]\nExternal disk usage: 96.0% [CRITICAL]\n------------------------------\nExternal overall status: CRITICAL\n"
+  }
+}

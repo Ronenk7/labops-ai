@@ -1,4 +1,5 @@
 """Unit tests for network connectivity configuration models."""
+from typing import Any
 
 import pytest
 
@@ -9,318 +10,250 @@ from labops_ai.network.connectivity_config import (
     LatencyThresholds,
     TcpTestConfig,
 )
+from tests.support.fixture_loader import load_test_fixture
+
+
+CASES = load_test_fixture("connectivity_config_cases.json")
 
 
 @pytest.mark.unit
 class TestConnectivityConfig:
-    """Verify creation of complete network connectivity configurations."""
+    """Verify creation of complete connectivity configurations."""
 
-    def test_creates_valid_connectivity_configuration(
-        self,
-    ) -> None:
-        """
-        Verify that valid settings create a complete configuration.
+    def test_creates_valid_connectivity_configuration(self) -> None:
+        """Verify that complete external settings create all models."""
+        case = CASES["valid_configuration"]
 
-        The test confirms that all nested configuration models are
-        accepted and that numeric values are normalized correctly.
-        """
         config = ConnectivityConfig(
-            dns_test=DnsTestConfig(
-                hostname="www.cloudflare.com",
-            ),
-            tcp_test=TcpTestConfig(
-                host="1.1.1.1",
-                port=443,
-            ),
-            connection=ConnectionSettings(
-                timeout_seconds=3,
-            ),
+            dns_test=DnsTestConfig(**case["dns_test"]),
+            tcp_test=TcpTestConfig(**case["tcp_test"]),
+            connection=ConnectionSettings(**case["connection"]),
             latency_thresholds_ms=LatencyThresholds(
-                warning=250,
-                critical=1000,
+                **case["latency_thresholds_ms"]
             ),
         )
 
-        assert (
-            config.dns_test.hostname
-            == "www.cloudflare.com"
-        )
-        assert config.tcp_test.host == "1.1.1.1"
-        assert config.tcp_test.port == 443
-        assert (
-            config.connection.timeout_seconds
-            == 3.0
-        )
-        assert (
-            config.latency_thresholds_ms.warning
-            == 250.0
-        )
-        assert (
-            config.latency_thresholds_ms.critical
-            == 1000.0
+        assert config.dns_test.hostname == case["dns_test"]["hostname"]
+        assert config.tcp_test.host == case["tcp_test"]["host"]
+        assert config.tcp_test.port == case["tcp_test"]["port"]
+        assert config.connection.timeout_seconds == float(
+            case["connection"]["timeout_seconds"]
         )
 
 
 @pytest.mark.unit
 class TestDnsTestConfig:
-    """Verify validation and normalization of DNS test settings."""
+    """Verify DNS target validation and normalization."""
 
-    def test_strips_surrounding_whitespace_from_hostname(
-        self,
-    ) -> None:
-        """
-        Verify that harmless surrounding whitespace is removed.
+    def test_strips_surrounding_whitespace_from_hostname(self) -> None:
+        """Verify that harmless surrounding whitespace is removed."""
+        case = CASES["dns_normalization"]
+        config = DnsTestConfig(hostname=case["input"])
 
-        Configuration values may contain accidental spaces around the
-        hostname, but the stored hostname must remain normalized.
-        """
-        config = DnsTestConfig(
-            hostname="  www.cloudflare.com  ",
-        )
-
-        assert (
-            config.hostname
-            == "www.cloudflare.com"
-        )
+        assert config.hostname == case["expected"]
 
     @pytest.mark.parametrize(
-        "hostname",
-        [
-            pytest.param(
-                "",
-                id="empty-hostname",
-            ),
-            pytest.param(
-                "   ",
-                id="whitespace-only-hostname",
-            ),
-            pytest.param(
-                "www.cloudflare .com",
-                id="hostname-containing-whitespace",
-            ),
-            pytest.param(
-                "a" * 254,
-                id="hostname-exceeds-maximum-length",
-            ),
-        ],
+        "case",
+        CASES["invalid_hostnames"],
+        ids=lambda case: case["id"],
     )
     def test_rejects_invalid_hostname_values(
         self,
-        hostname: str,
+        case: dict[str, Any],
     ) -> None:
-        """
-        Verify that unusable hostname values are rejected.
-
-        A DNS hostname must not be empty, contain whitespace, or exceed
-        the maximum supported hostname length.
-        """
+        """Verify that unusable hostname values are rejected."""
         with pytest.raises(ValueError):
-            DnsTestConfig(
-                hostname=hostname,
-            )
+            DnsTestConfig(hostname=case["value"])
 
     @pytest.mark.parametrize(
-        "hostname",
-        [
-            pytest.param(
-                123,
-                id="hostname-is-integer",
-            ),
-            pytest.param(
-                True,
-                id="hostname-is-boolean",
-            ),
-            pytest.param(
-                None,
-                id="hostname-is-none",
-            ),
-        ],
+        "case",
+        CASES["invalid_hostname_types"],
+        ids=lambda case: case["id"],
     )
     def test_rejects_non_string_hostname(
         self,
-        hostname: object,
+        case: dict[str, Any],
     ) -> None:
-        """
-        Verify that the DNS hostname accepts only string values.
-
-        Invalid data types must fail instead of being silently
-        converted into text.
-        """
+        """Verify that the DNS hostname accepts only strings."""
         with pytest.raises(TypeError):
-            DnsTestConfig(
-                hostname=hostname,  # type: ignore[arg-type]
-            )
+            DnsTestConfig(hostname=case["value"])
+
 
 @pytest.mark.unit
 class TestTcpTestConfig:
-    """Verify validation and normalization of TCP test settings."""
+    """Verify TCP target validation and normalization."""
 
     @pytest.mark.parametrize(
-        ("host", "expected_host"),
-        [
-            pytest.param(
-                "1.1.1.1",
-                "1.1.1.1",
-                id="valid-ipv4-address",
-            ),
-            pytest.param(
-                "  1.1.1.1  ",
-                "1.1.1.1",
-                id="ipv4-with-surrounding-whitespace",
-            ),
-            pytest.param(
-                "2001:4860:4860::8888",
-                "2001:4860:4860::8888",
-                id="valid-ipv6-address",
-            ),
-        ],
+        "case",
+        CASES["valid_ip_addresses"],
+        ids=lambda case: case["id"],
     )
     def test_accepts_and_normalizes_valid_ip_addresses(
         self,
-        host: str,
-        expected_host: str,
+        case: dict[str, Any],
     ) -> None:
-        """
-        Verify that valid IPv4 and IPv6 addresses are accepted.
-
-        Harmless surrounding whitespace must be removed before the
-        address is stored in the configuration object.
-        """
+        """Verify that valid IPv4 and IPv6 addresses are accepted."""
         config = TcpTestConfig(
-            host=host,
-            port=443,
+            host=case["input"],
+            port=CASES["valid_port"],
         )
 
-        assert config.host == expected_host
-        assert config.port == 443
+        assert config.host == case["expected"]
 
     @pytest.mark.parametrize(
-        "host",
-        [
-            pytest.param(
-                "",
-                id="empty-host",
-            ),
-            pytest.param(
-                "cloudflare.com",
-                id="hostname-instead-of-ip-address",
-            ),
-            pytest.param(
-                "999.999.999.999",
-                id="invalid-ipv4-address",
-            ),
-            pytest.param(
-                "1.1.1",
-                id="incomplete-ipv4-address",
-            ),
-        ],
+        "case",
+        CASES["invalid_ip_addresses"],
+        ids=lambda case: case["id"],
     )
     def test_rejects_invalid_ip_addresses(
         self,
-        host: str,
+        case: dict[str, Any],
     ) -> None:
-        """
-        Verify that the TCP target must contain a valid IP address.
-
-        A hostname is intentionally rejected because the TCP test must
-        remain independent from the DNS resolution test.
-        """
+        """Verify that the TCP target must contain a valid IP address."""
         with pytest.raises(
             ValueError,
             match="TCP host must be a valid",
         ):
             TcpTestConfig(
-                host=host,
-                port=443,
+                host=case["value"],
+                port=CASES["valid_port"],
             )
 
     @pytest.mark.parametrize(
-        "host",
-        [
-            pytest.param(
-                123,
-                id="host-is-integer",
-            ),
-            pytest.param(
-                True,
-                id="host-is-boolean",
-            ),
-            pytest.param(
-                None,
-                id="host-is-none",
-            ),
-        ],
+        "case",
+        CASES["invalid_host_types"],
+        ids=lambda case: case["id"],
     )
     def test_rejects_non_string_host(
         self,
-        host: object,
+        case: dict[str, Any],
     ) -> None:
-        """Verify that the TCP host accepts only string values."""
+        """Verify that the TCP host accepts only strings."""
         with pytest.raises(TypeError):
             TcpTestConfig(
-                host=host,  # type: ignore[arg-type]
-                port=443,
+                host=case["value"],
+                port=CASES["valid_port"],
             )
 
     @pytest.mark.parametrize(
-        "port",
-        [
-            pytest.param(
-                0,
-                id="port-below-valid-range",
-            ),
-            pytest.param(
-                65536,
-                id="port-above-valid-range",
-            ),
-            pytest.param(
-                -1,
-                id="negative-port",
-            ),
-        ],
+        "case",
+        CASES["invalid_ports"],
+        ids=lambda case: case["id"],
     )
     def test_rejects_port_outside_valid_range(
         self,
-        port: int,
+        case: dict[str, Any],
     ) -> None:
-        """Verify that a TCP port must be between 1 and 65535."""
+        """Verify that the TCP port remains inside the legal range."""
+        host = CASES["valid_configuration"]["tcp_test"]["host"]
+
         with pytest.raises(
             ValueError,
             match="TCP port must be between",
         ):
             TcpTestConfig(
-                host="1.1.1.1",
-                port=port,
+                host=host,
+                port=case["value"],
             )
 
     @pytest.mark.parametrize(
-        "port",
-        [
-            pytest.param(
-                "443",
-                id="port-is-string",
-            ),
-            pytest.param(
-                443.0,
-                id="port-is-float",
-            ),
-            pytest.param(
-                True,
-                id="port-is-boolean",
-            ),
-            pytest.param(
-                None,
-                id="port-is-none",
-            ),
-        ],
+        "case",
+        CASES["invalid_port_types"],
+        ids=lambda case: case["id"],
     )
     def test_rejects_non_integer_port(
         self,
-        port: object,
+        case: dict[str, Any],
     ) -> None:
-        """Verify that the TCP port accepts only integer values."""
+        """Verify that the TCP port accepts only integers."""
+        host = CASES["valid_configuration"]["tcp_test"]["host"]
+
         with pytest.raises(TypeError):
             TcpTestConfig(
-                host="1.1.1.1",
-                port=port,  # type: ignore[arg-type]
+                host=host,
+                port=case["value"],
+            )
+
+
+@pytest.mark.unit
+class TestConnectionSettings:
+    """Verify network timeout validation."""
+
+    def test_accepts_and_normalizes_valid_timeout(self) -> None:
+        """Verify that valid timeout values are normalized to float."""
+        case = CASES["valid_connection_timeout"]
+        config = ConnectionSettings(timeout_seconds=case["input"])
+
+        assert config.timeout_seconds == case["expected"]
+
+    @pytest.mark.parametrize(
+        "case",
+        CASES["invalid_connection_timeouts"],
+        ids=lambda case: case["id"],
+    )
+    def test_rejects_invalid_timeouts(
+        self,
+        case: dict[str, Any],
+    ) -> None:
+        """Verify that invalid timeout values fail validation."""
+        expected_error = (
+            TypeError
+            if isinstance(case["value"], (str, bool)) or case["value"] is None
+            else ValueError
+        )
+
+        with pytest.raises(expected_error):
+            ConnectionSettings(timeout_seconds=case["value"])
+
+
+@pytest.mark.unit
+class TestLatencyThresholds:
+    """Verify latency threshold validation."""
+
+    def test_accepts_valid_latency_thresholds(self) -> None:
+        """Verify that valid latency thresholds are normalized."""
+        case = CASES["valid_latency_thresholds"]
+        thresholds = LatencyThresholds(**case)
+
+        assert thresholds.warning == float(case["warning"])
+        assert thresholds.critical == float(case["critical"])
+
+    @pytest.mark.parametrize(
+        "case",
+        CASES["invalid_latency_order"],
+        ids=lambda case: case["id"],
+    )
+    def test_rejects_invalid_latency_order(
+        self,
+        case: dict[str, Any],
+    ) -> None:
+        """Verify that warning latency must be lower than critical."""
+        with pytest.raises(ValueError, match="must be lower"):
+            LatencyThresholds(
+                warning=case["warning"],
+                critical=case["critical"],
+            )
+
+    @pytest.mark.parametrize(
+        "case",
+        CASES["invalid_latency_values"],
+        ids=lambda case: case["id"],
+    )
+    def test_rejects_invalid_latency_values(
+        self,
+        case: dict[str, Any],
+    ) -> None:
+        """Verify that invalid latency values fail validation."""
+        has_invalid_type = any(
+            isinstance(case[field_name], (str, bool))
+            or case[field_name] is None
+            for field_name in ("warning", "critical")
+        )
+
+        expected_error = TypeError if has_invalid_type else ValueError
+
+        with pytest.raises(expected_error):
+            LatencyThresholds(
+                warning=case["warning"],
+                critical=case["critical"],
             )

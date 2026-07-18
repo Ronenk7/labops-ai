@@ -1,0 +1,173 @@
+{
+  "valid_thresholds": [
+    {
+      "id": "minimum-valid-range",
+      "warning": 0.0,
+      "critical": 1.0
+    },
+    {
+      "id": "valid-decimal-values",
+      "warning": 25.5,
+      "critical": 75.5
+    },
+    {
+      "id": "maximum-valid-range",
+      "warning": 99.0,
+      "critical": 100.0
+    }
+  ],
+  "invalid_threshold_ranges": [
+    {
+      "id": "warning-below-zero",
+      "warning": -1.0,
+      "critical": 90.0
+    },
+    {
+      "id": "critical-above-one-hundred",
+      "warning": 70.0,
+      "critical": 101.0
+    },
+    {
+      "id": "critical-below-zero",
+      "warning": 70.0,
+      "critical": -1.0
+    },
+    {
+      "id": "warning-above-one-hundred",
+      "warning": 101.0,
+      "critical": 102.0
+    }
+  ],
+  "invalid_threshold_order": [
+    {
+      "id": "equal-thresholds",
+      "warning": 70.0,
+      "critical": 70.0
+    },
+    {
+      "id": "warning-above-critical",
+      "warning": 90.0,
+      "critical": 70.0
+    }
+  ],
+  "invalid_threshold_types": [
+    {
+      "id": "warning-is-string",
+      "warning": "70",
+      "critical": 90.0
+    },
+    {
+      "id": "critical-is-string",
+      "warning": 70.0,
+      "critical": "90"
+    },
+    {
+      "id": "warning-is-boolean",
+      "warning": true,
+      "critical": 90.0
+    },
+    {
+      "id": "critical-is-boolean",
+      "warning": 70.0,
+      "critical": false
+    },
+    {
+      "id": "warning-is-null",
+      "warning": null,
+      "critical": 90.0
+    }
+  ],
+  "immutable_thresholds": {
+    "warning": 70.0,
+    "critical": 90.0,
+    "replacement_warning": 75.0
+  },
+  "valid_collection": {
+    "cpu_sample_interval_seconds": 1.5,
+    "disk_mount_point": "/var"
+  },
+  "invalid_collection_intervals": [
+    {
+      "id": "zero-interval",
+      "value": 0.0
+    },
+    {
+      "id": "negative-interval",
+      "value": -1.0
+    },
+    {
+      "id": "string-interval",
+      "value": "1.0"
+    },
+    {
+      "id": "boolean-interval",
+      "value": true
+    },
+    {
+      "id": "null-interval",
+      "value": null
+    }
+  ],
+  "invalid_mount_points": [
+    {
+      "id": "empty-mount-point",
+      "value": ""
+    },
+    {
+      "id": "whitespace-mount-point",
+      "value": "   "
+    },
+    {
+      "id": "numeric-mount-point",
+      "value": 123
+    },
+    {
+      "id": "boolean-mount-point",
+      "value": true
+    },
+    {
+      "id": "null-mount-point",
+      "value": null
+    }
+  ],
+  "valid_report": {
+    "title": "System Health Test Report",
+    "separator": "=========================",
+    "overall_label": "Overall test status",
+    "metric_labels": {
+      "cpu_percent": "CPU test usage",
+      "memory_percent": "Memory test usage",
+      "disk_percent": "Disk test usage"
+    }
+  },
+  "valid_system_config": {
+    "collection": {
+      "cpu_sample_interval_seconds": 1.0,
+      "disk_mount_point": "/"
+    },
+    "metrics": {
+      "cpu_percent": {
+        "warning": 70.0,
+        "critical": 90.0
+      },
+      "memory_percent": {
+        "warning": 75.0,
+        "critical": 90.0
+      },
+      "disk_percent": {
+        "warning": 80.0,
+        "critical": 95.0
+      }
+    },
+    "report": {
+      "title": "System Health Test Report",
+      "separator": "=========================",
+      "overall_label": "Overall test status",
+      "metric_labels": {
+        "cpu_percent": "CPU test usage",
+        "memory_percent": "Memory test usage",
+        "disk_percent": "Disk test usage"
+      }
+    }
+  }
+}

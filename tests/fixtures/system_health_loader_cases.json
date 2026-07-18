@@ -1,0 +1,141 @@
+{
+  "valid_custom_configuration": {
+    "collection": {
+      "cpu_sample_interval_seconds": 4.0,
+      "disk_mount_point": "/custom"
+    },
+    "metrics": {
+      "cpu_percent": {
+        "warning": 50.0,
+        "critical": 80.0
+      },
+      "memory_percent": {
+        "warning": 60.0,
+        "critical": 85.0
+      },
+      "disk_percent": {
+        "warning": 70.0,
+        "critical": 90.0
+      }
+    },
+    "report": {
+      "title": "Custom Health Report",
+      "separator": "####################",
+      "overall_label": "Custom overall",
+      "metric_labels": {
+        "cpu_percent": "Custom CPU",
+        "memory_percent": "Custom memory",
+        "disk_percent": "Custom disk"
+      }
+    }
+  },
+  "missing_section_configuration": {
+    "collection": {
+      "cpu_sample_interval_seconds": 1.0,
+      "disk_mount_point": "/"
+    },
+    "metrics": {
+      "cpu_percent": {
+        "warning": 70.0,
+        "critical": 90.0
+      },
+      "memory_percent": {
+        "warning": 75.0,
+        "critical": 90.0
+      },
+      "disk_percent": {
+        "warning": 80.0,
+        "critical": 95.0
+      }
+    }
+  },
+  "invalid_section_type_configuration": {
+    "collection": "invalid",
+    "metrics": {
+      "cpu_percent": {
+        "warning": 70.0,
+        "critical": 90.0
+      },
+      "memory_percent": {
+        "warning": 75.0,
+        "critical": 90.0
+      },
+      "disk_percent": {
+        "warning": 80.0,
+        "critical": 95.0
+      }
+    },
+    "report": {
+      "title": "Report",
+      "separator": "---",
+      "overall_label": "Overall",
+      "metric_labels": {
+        "cpu_percent": "CPU",
+        "memory_percent": "Memory",
+        "disk_percent": "Disk"
+      }
+    }
+  },
+  "missing_nested_field_configuration": {
+    "collection": {
+      "cpu_sample_interval_seconds": 1.0
+    },
+    "metrics": {
+      "cpu_percent": {
+        "warning": 70.0,
+        "critical": 90.0
+      },
+      "memory_percent": {
+        "warning": 75.0,
+        "critical": 90.0
+      },
+      "disk_percent": {
+        "warning": 80.0,
+        "critical": 95.0
+      }
+    },
+    "report": {
+      "title": "Report",
+      "separator": "---",
+      "overall_label": "Overall",
+      "metric_labels": {
+        "cpu_percent": "CPU",
+        "memory_percent": "Memory",
+        "disk_percent": "Disk"
+      }
+    }
+  },
+  "unexpected_key_configuration": {
+    "collection": {
+      "cpu_sample_interval_seconds": 1.0,
+      "disk_mount_point": "/"
+    },
+    "metrics": {
+      "cpu_percent": {
+        "warning": 70.0,
+        "critical": 90.0
+      },
+      "memory_percent": {
+        "warning": 75.0,
+        "critical": 90.0
+      },
+      "disk_percent": {
+        "warning": 80.0,
+        "critical": 95.0
+      }
+    },
+    "report": {
+      "title": "Report",
+      "separator": "---",
+      "overall_label": "Overall",
+      "metric_labels": {
+        "cpu_percent": "CPU",
+        "memory_percent": "Memory",
+        "disk_percent": "Disk"
+      }
+    },
+    "unexpected": true
+  },
+  "invalid_json_text": "{\"collection\":",
+  "missing_file_name": "missing_system_health.json"
+}
