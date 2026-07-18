@@ -1,0 +1,40 @@
+{
+  "healthy_summary": {
+    "dns": {
+      "check_type": "DNS",
+      "status": "PASSED",
+      "target": "www.cloudflare.com",
+      "latency_ms": 12.5,
+      "resolved_address": "104.16.123.96",
+      "health_status": "HEALTHY"
+    },
+    "tcp": {
+      "check_type": "TCP",
+      "status": "PASSED",
+      "target": "1.1.1.1:443",
+      "latency_ms": 3.7,
+      "health_status": "HEALTHY"
+    },
+    "overall_status": "HEALTHY",
+    "expected_report": "LabOps AI - Network Health\n---------------------------\nDNS: HEALTHY\nTarget: www.cloudflare.com\nResolved address: 104.16.123.96\nLatency: 12.50 ms\n\nTCP: HEALTHY\nTarget: 1.1.1.1:443\nLatency: 3.70 ms\n---------------------------\nOverall status: HEALTHY"
+  },
+  "failed_summary": {
+    "dns": {
+      "check_type": "DNS",
+      "status": "FAILED",
+      "target": "invalid.example",
+      "failure_reason": "DNS_RESOLUTION_FAILED",
+      "error_message": "Name or service not known",
+      "health_status": "CRITICAL"
+    },
+    "tcp": {
+      "check_type": "TCP",
+      "status": "PASSED",
+      "target": "1.1.1.1:443",
+      "latency_ms": 4.25,
+      "health_status": "HEALTHY"
+    },
+    "overall_status": "CRITICAL",
+    "expected_report": "LabOps AI - Network Health\n---------------------------\nDNS: CRITICAL\nTarget: invalid.example\nFailure reason: DNS_RESOLUTION_FAILED\nError: Name or service not known\n\nTCP: HEALTHY\nTarget: 1.1.1.1:443\nLatency: 4.25 ms\n---------------------------\nOverall status: CRITICAL"
+  }
+}
