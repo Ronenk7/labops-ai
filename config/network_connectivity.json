@@ -1,0 +1,16 @@
+{
+  "dns_test": {
+    "hostname": "www.cloudflare.com"
+  },
+  "tcp_test": {
+    "host": "1.1.1.1",
+    "port": 443
+  },
+  "connection": {
+    "timeout_seconds": 3.0
+  },
+  "latency_thresholds_ms": {
+    "warning": 250.0,
+    "critical": 1000.0
+  }
+}
