@@ -1,0 +1,27 @@
+{
+  "execution": {
+    "enabled": false,
+    "dry_run": true,
+    "command_timeout_seconds": 30.0,
+    "cooldown_seconds": 300,
+    "max_actions_per_run": 3
+  },
+  "service_rules": [
+    {
+      "action_id": "restart-system-journal",
+      "unit": "systemd-journald.service",
+      "enabled": true,
+      "trigger_statuses": [
+        "CRITICAL"
+      ]
+    },
+    {
+      "action_id": "restart-dbus",
+      "unit": "dbus.service",
+      "enabled": false,
+      "trigger_statuses": [
+        "CRITICAL"
+      ]
+    }
+  ]
+}
