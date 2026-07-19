@@ -19,6 +19,10 @@ from labops_ai.history.history_schema import (
     RUN_HISTORY_SCHEMA_SQL,
     RUN_HISTORY_SCHEMA_VERSION,
 )
+from labops_ai.history.history_store import (
+    RunHistoryStore,
+    RunHistoryStoreError,
+)
 
 
 __all__ = [
@@ -32,4 +36,6 @@ __all__ = [
     "RunHistoryRetentionConfig",
     "RunHistorySchemaError",
     "RunHistoryStorageConfig",
+    "RunHistoryStore",
+    "RunHistoryStoreError",
 ]
