@@ -1,0 +1,24 @@
+{
+  "valid_configuration": {
+    "execution": {
+      "enabled": true,
+      "dry_run": true,
+      "command_timeout_seconds": 15.0,
+      "cooldown_seconds": 60,
+      "max_actions_per_run": 2
+    },
+    "service_rules": [
+      {
+        "action_id": "restart-example-service",
+        "unit": "example.service",
+        "enabled": true,
+        "trigger_statuses": [
+          "WARNING",
+          "CRITICAL"
+        ]
+      }
+    ]
+  },
+  "invalid_json_text": "{ invalid recovery json",
+  "missing_file_name": "missing_recovery_actions.json"
+}

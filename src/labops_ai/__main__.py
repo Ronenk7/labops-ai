@@ -52,6 +52,14 @@ from labops_ai.processes import (
     PsutilProcessChecker,
     print_process_report,
 )
+from labops_ai.recovery import (
+    JsonRecoveryStateStore,
+    RecoveryConfigLoader,
+    RecoveryManager,
+    RecoveryRunSummary,
+    SystemctlRecoveryExecutor,
+    print_recovery_report,
+)
 from labops_ai.services import (
     ServiceMonitor,
     ServiceMonitorConfigLoader,
@@ -137,6 +145,23 @@ def run_service_health() -> ServiceMonitoringSummary:
         summary=summary,
         report=config.report,
     )
+
+    return summary
+
+
+def run_recovery_actions(
+    service_summary: ServiceMonitoringSummary,
+) -> RecoveryRunSummary:
+    """Evaluate safe recovery actions for monitored services."""
+    config = RecoveryConfigLoader().load()
+    manager = RecoveryManager(
+        config=config,
+        executor=SystemctlRecoveryExecutor(),
+        state_store=JsonRecoveryStateStore(),
+    )
+
+    summary = manager.run(service_summary)
+    print_recovery_report(summary)
 
     return summary
 
@@ -327,6 +352,9 @@ def main() -> None:
 
     print()
     service_summary = run_service_health()
+
+    print()
+    run_recovery_actions(service_summary)
 
     print()
     process_summary = run_process_health()
