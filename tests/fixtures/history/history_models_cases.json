@@ -1,0 +1,74 @@
+{
+  "valid_entry": {
+    "run_id": 42,
+    "generated_at": "2026-07-19T12:14:56+00:00",
+    "host_name": "Kukner7",
+    "overall_status": "WARNING",
+    "system_status": "HEALTHY",
+    "network_status": "WARNING",
+    "service_status": "HEALTHY",
+    "process_status": "HEALTHY",
+    "log_status": "HEALTHY",
+    "active_incident_count": 2,
+    "resolved_incident_count": 3,
+    "bundle_id": "labops-diagnostic-20260719T121456Z",
+    "archive_path": "runtime/diagnostic_bundles/labops-diagnostic-20260719T121456Z.zip"
+  },
+  "invalid_run_ids": [
+    {
+      "case_id": "zero-id",
+      "value": 0
+    },
+    {
+      "case_id": "negative-id",
+      "value": -1
+    },
+    {
+      "case_id": "string-id",
+      "value": "1"
+    },
+    {
+      "case_id": "boolean-id",
+      "value": true
+    }
+  ],
+  "invalid_strings": [
+    {
+      "case_id": "empty-host-name",
+      "field_name": "host_name",
+      "value": "   "
+    },
+    {
+      "case_id": "empty-bundle-id",
+      "field_name": "bundle_id",
+      "value": ""
+    },
+    {
+      "case_id": "empty-archive-path",
+      "field_name": "archive_path",
+      "value": "   "
+    }
+  ],
+  "invalid_counts": [
+    {
+      "case_id": "negative-active-count",
+      "field_name": "active_incident_count",
+      "value": -1
+    },
+    {
+      "case_id": "negative-resolved-count",
+      "field_name": "resolved_incident_count",
+      "value": -1
+    },
+    {
+      "case_id": "string-active-count",
+      "field_name": "active_incident_count",
+      "value": "2"
+    },
+    {
+      "case_id": "boolean-resolved-count",
+      "field_name": "resolved_incident_count",
+      "value": true
+    }
+  ]
+}

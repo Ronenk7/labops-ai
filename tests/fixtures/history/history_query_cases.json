@@ -1,0 +1,58 @@
+{
+  "runs": [
+    {
+      "bundle_id": "bundle-001",
+      "archive_path": "runtime/bundles/bundle-001.zip"
+    },
+    {
+      "bundle_id": "bundle-002",
+      "archive_path": "runtime/bundles/bundle-002.zip"
+    },
+    {
+      "bundle_id": "bundle-003",
+      "archive_path": "runtime/bundles/bundle-003.zip"
+    }
+  ],
+  "default_limit": 20,
+  "maximum_limit": 1000,
+  "invalid_limits": [
+    {
+      "case_id": "zero",
+      "value": 0
+    },
+    {
+      "case_id": "negative",
+      "value": -1
+    },
+    {
+      "case_id": "string",
+      "value": "10"
+    },
+    {
+      "case_id": "boolean",
+      "value": true
+    },
+    {
+      "case_id": "above-maximum",
+      "value": 1001
+    }
+  ],
+  "invalid_run_ids": [
+    {
+      "case_id": "zero",
+      "value": 0
+    },
+    {
+      "case_id": "negative",
+      "value": -1
+    },
+    {
+      "case_id": "string",
+      "value": "1"
+    },
+    {
+      "case_id": "boolean",
+      "value": true
+    }
+  ]
+}

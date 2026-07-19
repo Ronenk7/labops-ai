@@ -1,0 +1,16 @@
+{
+  "bundle_id": "labops-diagnostic-20260719T103000Z",
+  "second_bundle_id": "labops-diagnostic-20260719T103500Z",
+  "archive_path": "runtime/diagnostic_bundles/labops-diagnostic-20260719T103000Z.zip",
+  "second_archive_path": "runtime/diagnostic_bundles/labops-diagnostic-20260719T103500Z.zip",
+  "expected_counts": {
+    "monitoring_runs": 1,
+    "system_metrics": 2,
+    "network_checks": 2,
+    "service_checks": 1,
+    "process_checks": 1,
+    "process_pids": 1,
+    "log_checks": 1,
+    "incident_snapshots": 2
+  }
+}

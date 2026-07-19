@@ -1,0 +1,47 @@
+{
+  "reference_time": "2026-07-20T12:00:00+00:00",
+  "runs": [
+    {
+      "generated_at": "2026-05-01T10:00:00+00:00",
+      "bundle_id": "retention-bundle-001",
+      "archive_path": "runtime/bundles/retention-bundle-001.zip"
+    },
+    {
+      "generated_at": "2026-07-10T10:00:00+00:00",
+      "bundle_id": "retention-bundle-002",
+      "archive_path": "runtime/bundles/retention-bundle-002.zip"
+    },
+    {
+      "generated_at": "2026-07-18T10:00:00+00:00",
+      "bundle_id": "retention-bundle-003",
+      "archive_path": "runtime/bundles/retention-bundle-003.zip"
+    },
+    {
+      "generated_at": "2026-07-19T10:00:00+00:00",
+      "bundle_id": "retention-bundle-004",
+      "archive_path": "runtime/bundles/retention-bundle-004.zip"
+    }
+  ],
+  "invalid_deleted_counts": [
+    {
+      "case_id": "negative-age-count",
+      "deleted_by_age": -1,
+      "deleted_by_count": 0
+    },
+    {
+      "case_id": "negative-limit-count",
+      "deleted_by_age": 0,
+      "deleted_by_count": -1
+    },
+    {
+      "case_id": "string-age-count",
+      "deleted_by_age": "1",
+      "deleted_by_count": 0
+    },
+    {
+      "case_id": "boolean-limit-count",
+      "deleted_by_age": 0,
+      "deleted_by_count": true
+    }
+  ]
+}

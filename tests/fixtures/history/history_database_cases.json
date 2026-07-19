@@ -1,0 +1,21 @@
+{
+  "expected_tables": [
+    "history_metadata",
+    "monitoring_runs",
+    "system_metrics",
+    "network_checks",
+    "service_checks",
+    "process_checks",
+    "process_pids",
+    "log_checks",
+    "incident_snapshots"
+  ],
+  "expected_indexes": [
+    "idx_monitoring_runs_generated_at",
+    "idx_monitoring_runs_host",
+    "idx_monitoring_runs_status",
+    "idx_incident_snapshots_incident"
+  ],
+  "schema_version": "1",
+  "busy_timeout_milliseconds": 5000
+}

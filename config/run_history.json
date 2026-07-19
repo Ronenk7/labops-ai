@@ -1,0 +1,11 @@
+{
+  "storage": {
+    "database_path": "runtime/run_history.sqlite3",
+    "busy_timeout_seconds": 5.0
+  },
+  "retention": {
+    "max_runs": 1000,
+    "max_age_days": 90,
+    "prune_on_write": true
+  }
+}
