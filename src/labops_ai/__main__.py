@@ -11,6 +11,13 @@ from labops_ai.diagnostics import (
     DiagnosticSnapshotBuilder,
 )
 from labops_ai.health_status import HealthStatus
+from labops_ai.history import (
+    RunHistoryConfigLoader,
+    RunHistoryDatabase,
+    RunHistoryEntry,
+    RunHistoryRetentionPolicy,
+    RunHistoryStore,
+)
 from labops_ai.incidents import (
     IncidentIdGenerator,
     IncidentManagementConfigLoader,
@@ -273,6 +280,40 @@ def run_diagnostic_bundle(
     return result
 
 
+def save_run_history(
+    result: DiagnosticBundlePipelineResult,
+) -> RunHistoryEntry:
+    """Persist one diagnostic run in SQLite history."""
+    config = RunHistoryConfigLoader().load()
+
+    database = RunHistoryDatabase(
+        config=config.storage,
+    )
+    retention_policy = RunHistoryRetentionPolicy(
+        config=config.retention,
+    )
+    store = RunHistoryStore(
+        database=database,
+        retention_policy=retention_policy,
+    )
+
+    entry = store.save(
+        result.snapshot,
+        bundle_id=result.bundle.bundle_id,
+        archive_path=result.bundle.archive_path,
+    )
+
+    print("LabOps AI - Run History")
+    print("-----------------------------------")
+    print(f"Run ID: {entry.run_id}")
+    print(f"Generated at: {entry.generated_at.isoformat()}")
+    print(f"Host: {entry.host_name}")
+    print(f"Overall status: {entry.overall_status.value}")
+    print("-----------------------------------")
+
+    return entry
+
+
 def main() -> None:
     """Run monitoring, incidents, and diagnostic collection."""
     (
@@ -305,7 +346,7 @@ def main() -> None:
     )
 
     print()
-    run_diagnostic_bundle(
+    diagnostic_result = run_diagnostic_bundle(
         system_config=system_config,
         system_metrics=system_metrics,
         system_statuses=system_statuses,
@@ -315,6 +356,9 @@ def main() -> None:
         log_summary=log_summary,
         incident_state=incident_summary.state,
     )
+
+    print()
+    save_run_history(diagnostic_result)
 
 
 if __name__ == "__main__":
