@@ -22,6 +22,10 @@ from labops_ai.history.history_database import (
 from labops_ai.history.history_models import (
     RunHistoryEntry,
 )
+from labops_ai.history.history_retention import (
+    RunHistoryRetentionError,
+    RunHistoryRetentionPolicy,
+)
 
 
 class RunHistoryStoreError(RuntimeError):
@@ -90,6 +94,7 @@ class RunHistoryStore:
     """Persist complete monitoring runs transactionally."""
 
     database: RunHistoryDatabase
+    retention_policy: RunHistoryRetentionPolicy | None = None
 
     def __post_init__(self) -> None:
         """Validate the database dependency."""
@@ -100,6 +105,18 @@ class RunHistoryStore:
             raise TypeError(
                 "database must be a "
                 "RunHistoryDatabase instance."
+            )
+
+        if (
+            self.retention_policy is not None
+            and not isinstance(
+                self.retention_policy,
+                RunHistoryRetentionPolicy,
+            )
+        ):
+            raise TypeError(
+                "retention_policy must be a "
+                "RunHistoryRetentionPolicy instance or None."
             )
 
     def save(
@@ -172,8 +189,17 @@ class RunHistoryStore:
                 snapshot.incidents,
             )
 
+            if (
+                self.retention_policy is not None
+                and self.retention_policy.config.prune_on_write
+            ):
+                self.retention_policy.prune(connection)
+
             connection.commit()
-        except sqlite3.Error as error:
+        except (
+            sqlite3.Error,
+            RunHistoryRetentionError,
+        ) as error:
             connection.rollback()
             raise RunHistoryStoreError(
                 "Diagnostic run could not be saved "

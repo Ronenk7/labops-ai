@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import sqlite3
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -10,6 +11,9 @@ import pytest
 from labops_ai.health_status import HealthStatus
 from labops_ai.history import (
     RunHistoryDatabase,
+    RunHistoryRetentionConfig,
+    RunHistoryRetentionError,
+    RunHistoryRetentionPolicy,
     RunHistoryStorageConfig,
     RunHistoryStore,
     RunHistoryStoreError,
@@ -39,6 +43,38 @@ def build_store(
         )
     )
     return RunHistoryStore(database=database)
+
+
+def build_store_with_retention(
+    tmp_path: Path,
+    *,
+    max_runs: int,
+    prune_on_write: bool,
+) -> RunHistoryStore:
+    """Build a store with deterministic retention."""
+    database = RunHistoryDatabase(
+        config=RunHistoryStorageConfig(
+            database_path=str(
+                tmp_path / "retained_history.sqlite3"
+            ),
+            busy_timeout_seconds=5.0,
+        )
+    )
+    retention_policy = RunHistoryRetentionPolicy(
+        config=RunHistoryRetentionConfig(
+            max_runs=max_runs,
+            max_age_days=None,
+            prune_on_write=prune_on_write,
+        ),
+        clock=lambda: datetime.fromisoformat(
+            "2026-07-20T12:00:00+00:00"
+        ),
+    )
+
+    return RunHistoryStore(
+        database=database,
+        retention_policy=retention_policy,
+    )
 
 
 def query_count(
@@ -334,3 +370,145 @@ class TestRunHistoryStore:
                 store,
                 table_name,
             ) == 0
+
+
+class TestRunHistoryStoreRetention:
+    """Test automatic retention during transactional writes."""
+
+    def test_rejects_invalid_retention_dependency(
+        self,
+        tmp_path: Path,
+    ) -> None:
+        database = build_store(tmp_path).database
+
+        with pytest.raises(
+            TypeError,
+            match="RunHistoryRetentionPolicy",
+        ):
+            RunHistoryStore(
+                database=database,
+                retention_policy=object(),
+            )
+
+    def test_prunes_oldest_runs_after_write(
+        self,
+        tmp_path: Path,
+    ) -> None:
+        store = build_store_with_retention(
+            tmp_path,
+            max_runs=2,
+            prune_on_write=True,
+        )
+        snapshot = build_test_diagnostic_snapshot()
+
+        for index in range(1, 4):
+            store.save(
+                snapshot,
+                bundle_id=f"retention-bundle-{index}",
+                archive_path=(
+                    "runtime/bundles/"
+                    f"retention-bundle-{index}.zip"
+                ),
+            )
+
+        connection = store.database.connect()
+        try:
+            run_ids = tuple(
+                row["run_id"]
+                for row in connection.execute(
+                    """
+                    SELECT run_id
+                    FROM monitoring_runs
+                    ORDER BY run_id
+                    """
+                )
+            )
+        finally:
+            connection.close()
+
+        assert run_ids == (2, 3)
+        assert query_count(
+            store,
+            "monitoring_runs",
+        ) == 2
+        assert query_count(
+            store,
+            "system_metrics",
+        ) == 4
+        assert query_count(
+            store,
+            "incident_snapshots",
+        ) == 4
+
+    def test_skips_retention_when_disabled(
+        self,
+        tmp_path: Path,
+    ) -> None:
+        store = build_store_with_retention(
+            tmp_path,
+            max_runs=1,
+            prune_on_write=False,
+        )
+        snapshot = build_test_diagnostic_snapshot()
+
+        for index in range(1, 4):
+            store.save(
+                snapshot,
+                bundle_id=f"disabled-bundle-{index}",
+                archive_path=(
+                    "runtime/bundles/"
+                    f"disabled-bundle-{index}.zip"
+                ),
+            )
+
+        assert query_count(
+            store,
+            "monitoring_runs",
+        ) == 3
+
+    def test_retention_failure_rolls_back_new_run(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        store = build_store_with_retention(
+            tmp_path,
+            max_runs=2,
+            prune_on_write=True,
+        )
+
+        def fail_prune(
+            self: RunHistoryRetentionPolicy,
+            connection: sqlite3.Connection,
+        ) -> None:
+            raise RunHistoryRetentionError(
+                "Forced retention failure."
+            )
+
+        monkeypatch.setattr(
+            RunHistoryRetentionPolicy,
+            "prune",
+            fail_prune,
+        )
+
+        with pytest.raises(
+            RunHistoryStoreError,
+            match="could not be saved",
+        ):
+            store.save(
+                build_test_diagnostic_snapshot(),
+                bundle_id="failed-retention-bundle",
+                archive_path=(
+                    "runtime/bundles/"
+                    "failed-retention-bundle.zip"
+                ),
+            )
+
+        assert query_count(
+            store,
+            "monitoring_runs",
+        ) == 0
+        assert query_count(
+            store,
+            "system_metrics",
+        ) == 0
