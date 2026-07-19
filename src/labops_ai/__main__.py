@@ -1,5 +1,11 @@
 """Run all LabOps AI health monitoring components."""
 from labops_ai.config import SystemHealthConfigLoader
+from labops_ai.logs import (
+    FileLogScanner,
+    LogAnalyzer,
+    LogAnalyzerConfigLoader,
+    print_log_report,
+)
 from labops_ai.network import (
     ConnectivityConfigLoader,
     DnsConnectivityChecker,
@@ -105,6 +111,23 @@ def run_process_health() -> None:
     )
 
 
+def run_log_analysis() -> None:
+    """Run configured log analysis and print its report."""
+    config = LogAnalyzerConfigLoader().load()
+    scanner = FileLogScanner(config=config)
+    analyzer = LogAnalyzer(
+        config=config,
+        scanner=scanner,
+    )
+
+    summary = analyzer.run()
+
+    print_log_report(
+        summary=summary,
+        report=config.report,
+    )
+
+
 def main() -> None:
     """Run every currently supported LabOps AI check."""
     run_system_health()
@@ -114,6 +137,8 @@ def main() -> None:
     run_service_health()
     print()
     run_process_health()
+    print()
+    run_log_analysis()
 
 
 if __name__ == "__main__":

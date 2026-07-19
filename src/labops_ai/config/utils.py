@@ -1,5 +1,6 @@
 """Shared utilities for loading external JSON configuration files."""
 from __future__ import annotations
+
 import json
 from pathlib import Path
 from typing import Any
@@ -12,6 +13,7 @@ SYSTEM_HEALTH_CONFIG_PATH = CONFIG_DIRECTORY / "system_health.json"
 NETWORK_CONNECTIVITY_CONFIG_PATH = CONFIG_DIRECTORY / "network_connectivity.json"
 SERVICE_MONITOR_CONFIG_PATH = CONFIG_DIRECTORY / "service_monitor.json"
 PROCESS_MONITOR_CONFIG_PATH = CONFIG_DIRECTORY / "process_monitor.json"
+LOG_ANALYZER_CONFIG_PATH = CONFIG_DIRECTORY / "log_analyzer.json"
 
 
 def load_json_config(config_path: str | Path) -> dict[str, Any]:

@@ -1,0 +1,41 @@
+{
+  "source": {
+    "source_id": "application",
+    "label": "Application Log",
+    "path": "logs/application.log",
+    "required": true
+  },
+  "lines": [
+    {
+      "line_number": 1,
+      "text": "INFO Application started"
+    },
+    {
+      "line_number": 2,
+      "text": "WARNING Request TIMEOUT after five seconds"
+    },
+    {
+      "line_number": 3,
+      "text": "ERROR Connection refused by remote server"
+    },
+    {
+      "line_number": 4,
+      "text": "INFO Application stopped"
+    }
+  ],
+  "tail_file_lines": [
+    "line one",
+    "line two",
+    "line three",
+    "line four"
+  ],
+  "expected_tail_line_numbers": [
+    3,
+    4
+  ],
+  "expected_rule_ids": [
+    "timeout",
+    "error",
+    "connection-refused"
+  ]
+}

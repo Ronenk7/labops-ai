@@ -1,0 +1,80 @@
+{
+  "collection": {
+    "encoding": "utf-8",
+    "max_lines_per_source": 500
+  },
+  "sources": [
+    {
+      "source_id": "application",
+      "label": "Application Sample Log",
+      "path": "logs/application.log.sample",
+      "required": true
+    }
+  ],
+  "rules": [
+    {
+      "rule_id": "critical",
+      "label": "Critical event",
+      "pattern": "\\bCRITICAL\\b",
+      "severity": "CRITICAL",
+      "case_sensitive": false
+    },
+    {
+      "rule_id": "error",
+      "label": "Error event",
+      "pattern": "\\bERROR\\b",
+      "severity": "CRITICAL",
+      "case_sensitive": false
+    },
+    {
+      "rule_id": "timeout",
+      "label": "Timeout event",
+      "pattern": "\\bTIMEOUT\\b",
+      "severity": "WARNING",
+      "case_sensitive": false
+    },
+    {
+      "rule_id": "failed",
+      "label": "Failed operation",
+      "pattern": "\\bFAILED\\b",
+      "severity": "CRITICAL",
+      "case_sensitive": false
+    },
+    {
+      "rule_id": "connection-refused",
+      "label": "Connection refused",
+      "pattern": "connection refused",
+      "severity": "CRITICAL",
+      "case_sensitive": false
+    },
+    {
+      "rule_id": "out-of-memory",
+      "label": "Out of memory",
+      "pattern": "out of memory|oom-killer",
+      "severity": "CRITICAL",
+      "case_sensitive": false
+    }
+  ],
+  "report": {
+    "title": "LabOps AI - Log Analysis",
+    "separator": "---------------------------",
+    "overall_label": "Overall status",
+    "source_label": "Log source",
+    "source_id_label": "Source ID",
+    "path_label": "Path",
+    "required_label": "Required",
+    "scan_status_label": "Scan status",
+    "health_label": "Health",
+    "lines_scanned_label": "Lines scanned",
+    "matches_label": "Matches",
+    "match_label": "Match",
+    "rule_label": "Rule",
+    "severity_label": "Severity",
+    "line_number_label": "Line number",
+    "content_label": "Content",
+    "failure_reason_label": "Failure reason",
+    "error_message_label": "Error",
+    "yes_value": "Yes",
+    "no_value": "No"
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "valid_collection": {
+    "encoding": "utf-8",
+    "max_lines_per_source": 500
+  },
+  "invalid_max_lines": [
+    {
+      "case_id": "zero-lines",
+      "value": 0
+    },
+    {
+      "case_id": "negative-lines",
+      "value": -1
+    },
+    {
+      "case_id": "string-lines",
+      "value": "500"
+    },
+    {
+      "case_id": "boolean-lines",
+      "value": true
+    }
+  ],
+  "valid_source": {
+    "source_id": "application",
+    "label": "Application Log",
+    "path": "logs/application.log",
+    "required": true
+  },
+  "normalized_source": {
+    "source_id": "  application  ",
+    "label": "  Application Log  ",
+    "path": "  logs/application.log  ",
+    "required": true
+  },
+  "valid_rule": {
+    "rule_id": "timeout",
+    "label": "Timeout event",
+    "pattern": "\\bTIMEOUT\\b",
+    "case_sensitive": false
+  },
+  "valid_report": {
+    "title": "LabOps AI - Log Analysis",
+    "separator": "---------------------------",
+    "overall_label": "Overall status",
+    "source_label": "Log source",
+    "source_id_label": "Source ID",
+    "path_label": "Path",
+    "required_label": "Required",
+    "scan_status_label": "Scan status",
+    "health_label": "Health",
+    "lines_scanned_label": "Lines scanned",
+    "matches_label": "Matches",
+    "match_label": "Match",
+    "rule_label": "Rule",
+    "severity_label": "Severity",
+    "line_number_label": "Line number",
+    "content_label": "Content",
+    "failure_reason_label": "Failure reason",
+    "error_message_label": "Error",
+    "yes_value": "Yes",
+    "no_value": "No"
+  }
+}

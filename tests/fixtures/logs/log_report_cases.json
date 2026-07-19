@@ -1,0 +1,3 @@
+{
+  "expected_report": "LabOps AI - Log Analysis\n---------------------------\nLog source: Application Log\nSource ID: application\nPath: logs/application.log\nRequired: Yes\nScan status: ANALYZED\nHealth: CRITICAL\nLines scanned: 3\nMatches: 2\nMatch 1:\nRule: Timeout event\nSeverity: WARNING\nLine number: 2\nContent: WARNING Request TIMEOUT\nMatch 2:\nRule: Error event\nSeverity: CRITICAL\nLine number: 3\nContent: ERROR Connection refused\n\nLog source: Optional System Log\nSource ID: system\nPath: /var/log/syslog\nRequired: No\nScan status: CHECK_ERROR\nHealth: WARNING\nLines scanned: 0\nMatches: 0\nFailure reason: FILE_NOT_FOUND\nError: Log file was not found.\n---------------------------\nOverall status: CRITICAL"
+}

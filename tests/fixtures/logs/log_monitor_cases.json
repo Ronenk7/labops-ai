@@ -1,0 +1,20 @@
+{
+  "source": {
+    "source_id": "application",
+    "label": "Application Log",
+    "path": "logs/application.log",
+    "required": true
+  },
+  "warning_match": {
+    "rule_id": "timeout",
+    "rule_label": "Timeout event",
+    "line_number": 10,
+    "content": "Request TIMEOUT"
+  },
+  "critical_match": {
+    "rule_id": "error",
+    "rule_label": "Error event",
+    "line_number": 11,
+    "content": "ERROR Connection failed"
+  }
+}

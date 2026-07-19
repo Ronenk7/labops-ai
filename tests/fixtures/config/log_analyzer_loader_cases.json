@@ -1,0 +1,49 @@
+{
+  "valid_configuration": {
+    "collection": {
+      "encoding": "utf-8",
+      "max_lines_per_source": 200
+    },
+    "sources": [
+      {
+        "source_id": "application",
+        "label": "Application Log",
+        "path": "logs/application.log",
+        "required": true
+      }
+    ],
+    "rules": [
+      {
+        "rule_id": "error",
+        "label": "Error event",
+        "pattern": "\\bERROR\\b",
+        "severity": "CRITICAL",
+        "case_sensitive": false
+      }
+    ],
+    "report": {
+      "title": "LabOps AI - Log Analysis",
+      "separator": "---------------------------",
+      "overall_label": "Overall status",
+      "source_label": "Log source",
+      "source_id_label": "Source ID",
+      "path_label": "Path",
+      "required_label": "Required",
+      "scan_status_label": "Scan status",
+      "health_label": "Health",
+      "lines_scanned_label": "Lines scanned",
+      "matches_label": "Matches",
+      "match_label": "Match",
+      "rule_label": "Rule",
+      "severity_label": "Severity",
+      "line_number_label": "Line number",
+      "content_label": "Content",
+      "failure_reason_label": "Failure reason",
+      "error_message_label": "Error",
+      "yes_value": "Yes",
+      "no_value": "No"
+    }
+  },
+  "invalid_json_text": "{\"collection\":",
+  "missing_file_name": "missing_log_analyzer.json"
+}
