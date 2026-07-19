@@ -1,15 +1,17 @@
 """Create the read-only LabOps AI FastAPI application."""
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Annotated
 
 from fastapi import (
     FastAPI,
     HTTPException,
-    Path,
+    Path as ApiPath,
     Query,
     status as http_status,
 )
+from fastapi.responses import FileResponse, RedirectResponse
 
 from labops_ai.api.schemas import (
     ApiHealthResponse,
@@ -28,6 +30,7 @@ from labops_ai.history import (
 
 
 API_VERSION = "0.1.0"
+DASHBOARD_PATH = Path(__file__).with_name("dashboard.html")
 
 
 def build_default_history_service(
@@ -103,6 +106,28 @@ def create_app(
         docs_url="/docs",
         redoc_url="/redoc",
     )
+
+    @application.get(
+        "/",
+        include_in_schema=False,
+    )
+    def redirect_to_dashboard() -> RedirectResponse:
+        """Redirect the application root to the dashboard."""
+        return RedirectResponse(
+            url="/dashboard",
+            status_code=http_status.HTTP_307_TEMPORARY_REDIRECT,
+        )
+
+    @application.get(
+        "/dashboard",
+        include_in_schema=False,
+    )
+    def get_dashboard() -> FileResponse:
+        """Return the LabOps AI monitoring dashboard."""
+        return FileResponse(
+            DASHBOARD_PATH,
+            media_type="text/html",
+        )
 
     @application.get(
         "/api/v1/health",
@@ -197,7 +222,7 @@ def create_app(
     def get_run_by_id(
         run_id: Annotated[
             int,
-            Path(ge=1),
+            ApiPath(ge=1),
         ],
     ) -> RunHistoryResponse:
         """Return one monitoring run by identifier."""

@@ -281,3 +281,24 @@ def test_maps_history_failure_to_service_unavailable(
     assert response.json()["detail"] == (
         "Run history is temporarily unavailable."
     )
+
+def test_dashboard_is_available() -> None:
+    client = build_client(build_reader())
+
+    response = client.get("/dashboard")
+
+    assert response.status_code == 200
+    assert "LabOps AI Dashboard" in response.text
+    assert "/api/v1/runs" in response.text
+
+
+def test_root_redirects_to_dashboard() -> None:
+    client = build_client(build_reader())
+
+    response = client.get(
+        "/",
+        follow_redirects=False,
+    )
+
+    assert response.status_code == 307
+    assert response.headers["location"] == "/dashboard"
