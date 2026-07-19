@@ -1,0 +1,18 @@
+{
+  "valid": {
+    "host": "127.0.0.1",
+    "port": 8100,
+    "log_level": "warning",
+    "access_log": false,
+    "proxy_headers": true,
+    "workers": 2
+  },
+  "invalid_port": {
+    "host": "127.0.0.1",
+    "port": 70000,
+    "log_level": "info",
+    "access_log": true,
+    "proxy_headers": false,
+    "workers": 1
+  }
+}

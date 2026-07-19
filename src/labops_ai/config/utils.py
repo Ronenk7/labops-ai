@@ -19,6 +19,7 @@ INCIDENT_SIGNALS_CONFIG_PATH = CONFIG_DIRECTORY / "incident_signals.json"
 DIAGNOSTIC_BUNDLE_CONFIG_PATH = CONFIG_DIRECTORY / "diagnostic_bundle.json"
 RUN_HISTORY_CONFIG_PATH = CONFIG_DIRECTORY / "run_history.json"
 RECOVERY_ACTIONS_CONFIG_PATH = CONFIG_DIRECTORY / "recovery_actions.json"
+API_SERVER_CONFIG_PATH = CONFIG_DIRECTORY / "api_server.json"
 
 
 def load_json_config(config_path: str | Path) -> dict[str, Any]:
