@@ -1,0 +1,50 @@
+{
+  "artifact": {
+    "artifact_type": "JSON_REPORT",
+    "file_name": "diagnostic_report.json",
+    "size_bytes": 1234,
+    "sha256": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+  },
+  "manifest": {
+    "schema_version": 1,
+    "bundle_id": "labops-diagnostic-20260719T073000Z",
+    "generated_at": "2026-07-19T10:30:00+03:00",
+    "host_name": "Kukner7"
+  },
+  "invalid_sizes": [
+    {
+      "case_id": "negative-size",
+      "value": -1
+    },
+    {
+      "case_id": "string-size",
+      "value": "123"
+    },
+    {
+      "case_id": "float-size",
+      "value": 12.5
+    },
+    {
+      "case_id": "boolean-size",
+      "value": true
+    }
+  ],
+  "invalid_hashes": [
+    {
+      "case_id": "empty-hash",
+      "value": ""
+    },
+    {
+      "case_id": "short-hash",
+      "value": "abc123"
+    },
+    {
+      "case_id": "non-hexadecimal-hash",
+      "value": "GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG"
+    },
+    {
+      "case_id": "numeric-hash",
+      "value": 12345
+    }
+  ]
+}

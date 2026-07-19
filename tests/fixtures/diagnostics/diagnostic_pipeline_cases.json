@@ -1,0 +1,9 @@
+{
+  "generated_at": "2026-07-19T13:30:00+03:00",
+  "expected_generated_at": "2026-07-19T10:30:00+00:00",
+  "host_name": "Kukner7",
+  "bundle_id": "labops-diagnostic-20260719T103000Z",
+  "archive_path": "/tmp/labops-diagnostic-20260719T103000Z.zip",
+  "artifact_file_name": "diagnostic_report.json",
+  "artifact_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+}

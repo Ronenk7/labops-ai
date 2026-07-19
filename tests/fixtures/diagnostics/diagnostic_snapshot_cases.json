@@ -1,0 +1,53 @@
+{
+  "generated_at": "2026-07-19T13:30:00+03:00",
+  "expected_generated_at": "2026-07-19T10:30:00+00:00",
+  "host_name": "Kukner7",
+  "system": {
+    "metrics": {
+      "cpu_percent": 72.5,
+      "memory_percent": 40.25,
+      "disk_percent": 95.0
+    },
+    "statuses": {
+      "cpu_percent": "WARNING",
+      "memory_percent": "HEALTHY",
+      "disk_percent": "CRITICAL"
+    },
+    "labels": {
+      "cpu_percent": "CPU usage",
+      "memory_percent": "Memory usage",
+      "disk_percent": "Disk usage"
+    }
+  },
+  "network": {
+    "dns_target": "www.cloudflare.com",
+    "dns_address": "104.16.124.96",
+    "dns_latency_ms": 6.25,
+    "tcp_target": "1.1.1.1:443",
+    "tcp_error": "Connection timed out."
+  },
+  "service": {
+    "active_name": "systemd-journald.service",
+    "active_label": "System Journal",
+    "failed_name": "example.service",
+    "failed_label": "Example Service",
+    "failed_message": "systemctl timed out."
+  },
+  "process": {
+    "running_name": "python",
+    "running_label": "Python Runtime",
+    "missing_name": "worker",
+    "missing_label": "Background Worker"
+  },
+  "log": {
+    "analyzed_id": "application",
+    "analyzed_label": "Application Log",
+    "failed_id": "system",
+    "failed_label": "System Log",
+    "failed_message": "Log file was not found."
+  },
+  "incidents": {
+    "active_id": "INC-000001",
+    "resolved_id": "INC-000002"
+  }
+}

@@ -1,0 +1,81 @@
+{
+  "valid_output": {
+    "directory": "runtime/diagnostic_bundles",
+    "archive_prefix": "labops-diagnostic",
+    "timestamp_format": "%Y%m%dT%H%M%SZ"
+  },
+  "invalid_prefixes": [
+    {
+      "case_id": "contains-whitespace",
+      "value": "labops diagnostic"
+    },
+    {
+      "case_id": "contains-path-separator",
+      "value": "labops/diagnostic"
+    },
+    {
+      "case_id": "starts-with-symbol",
+      "value": "-diagnostic"
+    }
+  ],
+  "invalid_timestamp_formats": [
+    {
+      "case_id": "no-directive",
+      "value": "fixed-timestamp"
+    },
+    {
+      "case_id": "produces-path-separators",
+      "value": "%Y/%m/%d"
+    }
+  ],
+  "valid_collection": {
+    "include_json_report": true,
+    "include_text_report": true,
+    "include_incident_snapshot": true
+  },
+  "invalid_boolean_fields": [
+    {
+      "case_id": "string-json-flag",
+      "field_name": "include_json_report",
+      "value": "true"
+    },
+    {
+      "case_id": "integer-text-flag",
+      "field_name": "include_text_report",
+      "value": 1
+    },
+    {
+      "case_id": "null-incident-flag",
+      "field_name": "include_incident_snapshot",
+      "value": null
+    }
+  ],
+  "valid_files": {
+    "manifest_name": "manifest.json",
+    "json_report_name": "diagnostic_report.json",
+    "text_report_name": "diagnostic_report.txt",
+    "incident_snapshot_name": "incidents.json"
+  },
+  "invalid_file_names": [
+    {
+      "case_id": "forward-slash",
+      "field_name": "manifest_name",
+      "value": "metadata/manifest.json"
+    },
+    {
+      "case_id": "backslash",
+      "field_name": "json_report_name",
+      "value": "reports\\diagnostic.json"
+    },
+    {
+      "case_id": "current-directory",
+      "field_name": "text_report_name",
+      "value": "."
+    },
+    {
+      "case_id": "parent-directory",
+      "field_name": "incident_snapshot_name",
+      "value": ".."
+    }
+  ]
+}

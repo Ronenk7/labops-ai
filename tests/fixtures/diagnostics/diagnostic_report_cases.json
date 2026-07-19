@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-07-19T10:30:00+00:00",
+  "host_name": "Kukner7",
+  "overall_status": "CRITICAL",
+  "active_incidents": 1,
+  "resolved_incidents": 1,
+  "section_headers": [
+    "SYSTEM HEALTH",
+    "NETWORK HEALTH",
+    "SERVICE HEALTH",
+    "PROCESS HEALTH",
+    "LOG ANALYSIS",
+    "INCIDENTS"
+  ],
+  "expected_text_lines": [
+    "CPU usage (cpu_percent): 72.50% [WARNING]",
+    "TCP: FAILED [CRITICAL]",
+    "Failure reason: TIMEOUT",
+    "Error: Connection timed out.",
+    "Process: Python Runtime",
+    "Total memory: 450.25 MB",
+    "Failure reason: FILE_NOT_FOUND",
+    "Incident ID: INC-000001",
+    "Incident ID: INC-000002",
+    "Resolved at: 2026-07-19T09:20:00+00:00"
+  ]
+}

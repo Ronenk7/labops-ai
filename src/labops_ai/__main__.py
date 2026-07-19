@@ -1,7 +1,14 @@
-"""Run all LabOps AI monitoring and incident components."""
+"""Run all LabOps AI monitoring, incident, and diagnostic components."""
 from labops_ai.config import (
     SystemHealthConfig,
     SystemHealthConfigLoader,
+)
+from labops_ai.diagnostics import (
+    DiagnosticBundleConfigLoader,
+    DiagnosticBundlePipeline,
+    DiagnosticBundlePipelineResult,
+    DiagnosticBundleWriter,
+    DiagnosticSnapshotBuilder,
 )
 from labops_ai.health_status import HealthStatus
 from labops_ai.incidents import (
@@ -12,6 +19,7 @@ from labops_ai.incidents import (
     IncidentProcessingSummary,
     IncidentSignalConfigLoader,
     IncidentSignalFactory,
+    IncidentStoreState,
     JsonIncidentStore,
     print_incident_report,
 )
@@ -217,8 +225,56 @@ def run_incident_management(
     return summary
 
 
+def run_diagnostic_bundle(
+    *,
+    system_config: SystemHealthConfig,
+    system_metrics: SystemMetricValues,
+    system_statuses: SystemMetricStatuses,
+    network_summary: NetworkConnectivitySummary,
+    service_summary: ServiceMonitoringSummary,
+    process_summary: ProcessMonitoringSummary,
+    log_summary: LogAnalysisSummary,
+    incident_state: IncidentStoreState,
+) -> DiagnosticBundlePipelineResult:
+    """Create one complete diagnostic ZIP bundle."""
+    config = DiagnosticBundleConfigLoader().load()
+    pipeline = DiagnosticBundlePipeline(
+        snapshot_builder=DiagnosticSnapshotBuilder(),
+        bundle_writer=DiagnosticBundleWriter(config=config),
+    )
+
+    result = pipeline.run(
+        system_metrics=system_metrics,
+        system_statuses=system_statuses,
+        system_metric_labels=(
+            system_config.report.metric_labels
+        ),
+        network_summary=network_summary,
+        service_summary=service_summary,
+        process_summary=process_summary,
+        log_summary=log_summary,
+        incident_state=incident_state,
+    )
+
+    print("LabOps AI - Diagnostic Bundle")
+    print("-----------------------------------")
+    print(f"Bundle ID: {result.bundle.bundle_id}")
+    print(f"Archive: {result.bundle.archive_path}")
+    print(
+        "Artifacts: "
+        f"{len(result.bundle.manifest.artifacts)}"
+    )
+    print(
+        "Overall status: "
+        f"{result.snapshot.overall_status.value}"
+    )
+    print("-----------------------------------")
+
+    return result
+
+
 def main() -> None:
-    """Run monitoring once and process all results as incidents."""
+    """Run monitoring, incidents, and diagnostic collection."""
     (
         system_config,
         system_metrics,
@@ -238,7 +294,7 @@ def main() -> None:
     log_summary = run_log_analysis()
 
     print()
-    run_incident_management(
+    incident_summary = run_incident_management(
         system_config=system_config,
         system_metrics=system_metrics,
         system_statuses=system_statuses,
@@ -246,6 +302,18 @@ def main() -> None:
         service_summary=service_summary,
         process_summary=process_summary,
         log_summary=log_summary,
+    )
+
+    print()
+    run_diagnostic_bundle(
+        system_config=system_config,
+        system_metrics=system_metrics,
+        system_statuses=system_statuses,
+        network_summary=network_summary,
+        service_summary=service_summary,
+        process_summary=process_summary,
+        log_summary=log_summary,
+        incident_state=incident_summary.state,
     )
 
 

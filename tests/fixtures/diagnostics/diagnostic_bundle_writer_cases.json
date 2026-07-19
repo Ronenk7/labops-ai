@@ -1,0 +1,19 @@
+{
+  "archive_name": "labops-diagnostic-20260719T103000Z.zip",
+  "bundle_id": "labops-diagnostic-20260719T103000Z",
+  "manifest_name": "manifest.json",
+  "json_report_name": "diagnostic_report.json",
+  "text_report_name": "diagnostic_report.txt",
+  "incident_snapshot_name": "incidents.json",
+  "all_archive_files": [
+    "manifest.json",
+    "diagnostic_report.json",
+    "diagnostic_report.txt",
+    "incidents.json"
+  ],
+  "generated_at": "2026-07-19T10:30:00+00:00",
+  "host_name": "Kukner7",
+  "incident_count": 2,
+  "active_incidents": 1,
+  "resolved_incidents": 1
+}
