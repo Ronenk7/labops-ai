@@ -8,12 +8,15 @@ version = "0.1.0"
 description = "Linux infrastructure monitoring, diagnostics, and automation platform."
 requires-python = ">=3.12"
 dependencies = [
-    "psutil==7.2.2"
+    "psutil==7.2.2",
+    "fastapi==0.139.2",
+    "uvicorn==0.51.0"
 ]
 
 [project.optional-dependencies]
 dev = [
-    "pytest==9.1.1"
+    "pytest==9.1.1",
+    "httpx==0.28.1"
 ]
 
 [tool.setuptools]
@@ -21,3 +24,10 @@ package-dir = {"" = "src"}
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+"labops_ai.api" = [
+    "dashboard/*.html",
+    "dashboard/static/*.css",
+    "dashboard/static/*.js"
+]
