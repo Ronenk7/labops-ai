@@ -11,7 +11,18 @@ const state = {
   sortDirection: "desc",
   refreshTimer: null,
   countdownTimer: null,
-  nextRefreshAt: null
+  nextRefreshAt: null,
+  liveSource: null,
+  liveRunTimer: null,
+  latestObservedRunId: null,
+  liveHistory: {
+    cpu: [],
+    memory: [],
+    disk: [],
+    network: []
+  }
+  hostSuggestionTimer: null,
+  hostSuggestionRequest: 0
 };
 
 const elements = {
@@ -22,6 +33,55 @@ const elements = {
   refreshCountdown: document.querySelector("#refresh-countdown"),
   exportButton: document.querySelector("#export-button"),
   printButton: document.querySelector("#print-button"),
+  liveStreamState: document.querySelector(
+    "#live-stream-state"
+  ),
+  liveCore: document.querySelector("#live-core"),
+  livePressure: document.querySelector("#live-pressure"),
+  liveStatus: document.querySelector("#live-status"),
+  liveSampledAt: document.querySelector(
+    "#live-sampled-at"
+  ),
+  liveUptime: document.querySelector("#live-uptime"),
+  liveProcesses: document.querySelector(
+    "#live-processes"
+  ),
+  liveCpuCard: document.querySelector(
+    "#live-cpu-card"
+  ),
+  liveMemoryCard: document.querySelector(
+    "#live-memory-card"
+  ),
+  liveDiskCard: document.querySelector(
+    "#live-disk-card"
+  ),
+  liveCpu: document.querySelector("#live-cpu"),
+  liveMemory: document.querySelector("#live-memory"),
+  liveDisk: document.querySelector("#live-disk"),
+  liveCpuCores: document.querySelector(
+    "#live-cpu-cores"
+  ),
+  liveNetworkRx: document.querySelector(
+    "#live-network-rx"
+  ),
+  liveNetworkTx: document.querySelector(
+    "#live-network-tx"
+  ),
+  liveLoad1: document.querySelector("#live-load-1"),
+  liveLoad5: document.querySelector("#live-load-5"),
+  liveLoad15: document.querySelector("#live-load-15"),
+  liveCpuSparkline: document.querySelector(
+    "#live-cpu-sparkline"
+  ),
+  liveMemorySparkline: document.querySelector(
+    "#live-memory-sparkline"
+  ),
+  liveDiskSparkline: document.querySelector(
+    "#live-disk-sparkline"
+  ),
+  liveNetworkSparkline: document.querySelector(
+    "#live-network-sparkline"
+  ),
   overviewCaption: document.querySelector("#overview-caption"),
   currentHealth: document.querySelector("#current-health"),
   latestHost: document.querySelector("#latest-host"),
@@ -99,6 +159,15 @@ const elements = {
   ),
   filters: document.querySelector("#filters"),
   hostFilter: document.querySelector("#host-filter"),
+  hostAutocomplete: document.querySelector(
+    "#host-autocomplete"
+  ),
+  hostSuggestions: document.querySelector(
+    "#host-suggestions"
+  ),
+  hostSuggestionsButton: document.querySelector(
+    "#host-suggestions-button"
+  ),
   statusFilter: document.querySelector("#status-filter"),
   limitFilter: document.querySelector("#limit-filter"),
   clearFilters: document.querySelector("#clear-filters"),
@@ -126,6 +195,362 @@ const incidentStatusRank = {
   OPEN: 3
 };
 
+function formatTransferRate(bytesPerSecond) {
+  const units = ["B/s", "KB/s", "MB/s", "GB/s"];
+  let value = Math.max(0, bytesPerSecond);
+  let unitIndex = 0;
+
+  while (
+    value >= 1024
+    && unitIndex < units.length - 1
+  ) {
+    value /= 1024;
+    unitIndex += 1;
+  }
+
+  const precision = value >= 100 ? 0 : 1;
+
+  return `${value.toFixed(precision)} ${
+    units[unitIndex]
+  }`;
+}
+
+function formatUptime(seconds) {
+  const totalSeconds = Math.max(
+    0,
+    Math.floor(seconds)
+  );
+  const days = Math.floor(
+    totalSeconds / 86400
+  );
+  const hours = Math.floor(
+    (totalSeconds % 86400) / 3600
+  );
+  const minutes = Math.floor(
+    (totalSeconds % 3600) / 60
+  );
+
+  if (days > 0) {
+    return `${days}d ${hours}h`;
+  }
+
+  if (hours > 0) {
+    return `${hours}h ${minutes}m`;
+  }
+
+  return `${minutes}m`;
+}
+
+function appendLiveHistory(key, value) {
+  const values = state.liveHistory[key];
+  values.push(Number(value));
+
+  if (values.length > 32) {
+    values.shift();
+  }
+}
+
+function renderLiveSparkline(element, values) {
+  element.replaceChildren();
+
+  if (values.length < 2) {
+    return;
+  }
+
+  const maximum = Math.max(...values, 1);
+  const minimum = Math.min(...values, 0);
+  const range = Math.max(maximum - minimum, 1);
+
+  const points = values.map(
+    (value, index) => {
+      const x = (
+        index / (values.length - 1)
+      ) * 100;
+      const y = (
+        25
+        - ((value - minimum) / range) * 21
+      );
+
+      return `${x.toFixed(2)},${y.toFixed(2)}`;
+    }
+  );
+
+  const area = document.createElementNS(
+    "http://www.w3.org/2000/svg",
+    "polygon"
+  );
+  area.setAttribute(
+    "points",
+    `0,28 ${points.join(" ")} 100,28`
+  );
+  area.setAttribute(
+    "class",
+    "live-sparkline__area"
+  );
+
+  const line = document.createElementNS(
+    "http://www.w3.org/2000/svg",
+    "polyline"
+  );
+  line.setAttribute("points", points.join(" "));
+
+  element.append(area, line);
+}
+
+function animateLiveCard(card) {
+  card.classList.remove("is-updating");
+  void card.offsetWidth;
+  card.classList.add("is-updating");
+
+  window.setTimeout(
+    () => card.classList.remove("is-updating"),
+    520
+  );
+}
+
+function updateLiveGauge(
+  card,
+  valueElement,
+  value
+) {
+  const normalized = Math.min(
+    100,
+    Math.max(0, Number(value))
+  );
+
+  card.style.setProperty(
+    "--value",
+    normalized.toFixed(2)
+  );
+  valueElement.textContent =
+    `${normalized.toFixed(1)}%`;
+
+  animateLiveCard(card);
+}
+
+function renderLiveMetrics(metrics) {
+  appendLiveHistory(
+    "cpu",
+    metrics.cpu_percent
+  );
+  appendLiveHistory(
+    "memory",
+    metrics.memory_percent
+  );
+  appendLiveHistory(
+    "disk",
+    metrics.disk_percent
+  );
+  appendLiveHistory(
+    "network",
+    (
+      metrics.network_receive_bps
+      + metrics.network_transmit_bps
+    )
+  );
+
+  updateLiveGauge(
+    elements.liveCpuCard,
+    elements.liveCpu,
+    metrics.cpu_percent
+  );
+  updateLiveGauge(
+    elements.liveMemoryCard,
+    elements.liveMemory,
+    metrics.memory_percent
+  );
+  updateLiveGauge(
+    elements.liveDiskCard,
+    elements.liveDisk,
+    metrics.disk_percent
+  );
+
+  elements.livePressure.textContent =
+    `${Math.max(
+      metrics.cpu_percent,
+      metrics.memory_percent,
+      metrics.disk_percent
+    ).toFixed(0)}%`;
+
+  elements.liveStatus.textContent =
+    metrics.status;
+  elements.liveSampledAt.textContent =
+    new Date(
+      metrics.sampled_at
+    ).toLocaleTimeString();
+  elements.liveUptime.textContent =
+    formatUptime(metrics.uptime_seconds);
+  elements.liveProcesses.textContent =
+    String(metrics.process_count);
+  elements.liveCpuCores.textContent =
+    `${metrics.cpu_count} logical CPU cores`;
+
+  elements.liveNetworkRx.textContent =
+    formatTransferRate(
+      metrics.network_receive_bps
+    );
+  elements.liveNetworkTx.textContent =
+    formatTransferRate(
+      metrics.network_transmit_bps
+    );
+
+  elements.liveLoad1.textContent =
+    metrics.load_1.toFixed(2);
+  elements.liveLoad5.textContent =
+    metrics.load_5.toFixed(2);
+  elements.liveLoad15.textContent =
+    metrics.load_15.toFixed(2);
+
+  elements.liveCore.classList.remove(
+    "live-core--HEALTHY",
+    "live-core--WARNING",
+    "live-core--CRITICAL"
+  );
+  elements.liveCore.classList.add(
+    `live-core--${metrics.status}`
+  );
+
+  renderLiveSparkline(
+    elements.liveCpuSparkline,
+    state.liveHistory.cpu
+  );
+  renderLiveSparkline(
+    elements.liveMemorySparkline,
+    state.liveHistory.memory
+  );
+  renderLiveSparkline(
+    elements.liveDiskSparkline,
+    state.liveHistory.disk
+  );
+  renderLiveSparkline(
+    elements.liveNetworkSparkline,
+    state.liveHistory.network
+  );
+}
+
+function setLiveStreamState(stateName, label) {
+  if (!elements.liveStreamState) {
+    return;
+  }
+
+  elements.liveStreamState.classList.remove(
+    "live-stream-state--online",
+    "live-stream-state--error"
+  );
+
+  if (stateName === "online") {
+    elements.liveStreamState.classList.add(
+      "live-stream-state--online"
+    );
+  }
+
+  if (stateName === "error") {
+    elements.liveStreamState.classList.add(
+      "live-stream-state--error"
+    );
+  }
+
+  elements.liveStreamState.textContent = label;
+}
+
+function connectLiveStream() {
+  if (
+    !elements.liveStreamState
+    || !elements.liveCore
+    || typeof window.EventSource !== "function"
+  ) {
+    return;
+  }
+
+  if (state.liveSource) {
+    state.liveSource.close();
+  }
+
+  setLiveStreamState(
+    "connecting",
+    "Connecting to live stream"
+  );
+
+  const source = new EventSource(
+    "/api/v1/live/stream"
+  );
+
+  state.liveSource = source;
+
+  source.addEventListener(
+    "open",
+    () => {
+      setLiveStreamState(
+        "online",
+        "Live · updating every 2 seconds"
+      );
+    }
+  );
+
+  source.addEventListener(
+    "metrics",
+    event => {
+      try {
+        renderLiveMetrics(
+          JSON.parse(event.data)
+        );
+      } catch {
+        setLiveStreamState(
+          "error",
+          "Invalid live signal"
+        );
+      }
+    }
+  );
+
+  source.addEventListener(
+    "error",
+    () => {
+      setLiveStreamState(
+        "error",
+        "Reconnecting to live stream"
+      );
+    }
+  );
+}
+
+async function watchLatestRun() {
+  window.clearTimeout(state.liveRunTimer);
+
+  try {
+    const latestRun = await fetchJson(
+      "/api/v1/runs/latest"
+    );
+
+    if (state.latestObservedRunId === null) {
+      state.latestObservedRunId =
+        latestRun.run_id;
+    } else if (
+      latestRun.run_id
+      !== state.latestObservedRunId
+    ) {
+      state.latestObservedRunId =
+        latestRun.run_id;
+
+      showToast(
+        `New monitoring run #${
+          latestRun.run_id
+        } received.`
+      );
+
+      await loadDashboard(false);
+    }
+  } catch {
+    // The scheduled dashboard refresh remains
+    // the fallback when history is unavailable.
+  } finally {
+    state.liveRunTimer = window.setTimeout(
+      watchLatestRun,
+      5000
+    );
+  }
+}
+
 function formatDate(value) {
   return new Intl.DateTimeFormat(
     undefined,
@@ -152,6 +577,113 @@ function buildRunsParameters(includeStatus = true) {
   }
 
   return parameters;
+}
+
+function closeHostSuggestions() {
+  elements.hostSuggestions.hidden = true;
+  elements.hostSuggestions.replaceChildren();
+  elements.hostFilter.setAttribute(
+    "aria-expanded",
+    "false"
+  );
+}
+
+function selectHostSuggestion(hostName) {
+  elements.hostFilter.value = hostName;
+  closeHostSuggestions();
+  loadDashboard(false);
+}
+
+function renderHostSuggestions(hosts) {
+  elements.hostSuggestions.replaceChildren();
+
+  if (!hosts.length) {
+    closeHostSuggestions();
+    return;
+  }
+
+  for (const hostName of hosts) {
+    const item = document.createElement("li");
+    const button = createElement(
+      "button",
+      "",
+      hostName
+    );
+
+    button.type = "button";
+    button.setAttribute("role", "option");
+
+    button.addEventListener(
+      "click",
+      () => selectHostSuggestion(hostName)
+    );
+
+    item.appendChild(button);
+    elements.hostSuggestions.appendChild(item);
+  }
+
+  elements.hostSuggestions.hidden = false;
+  elements.hostFilter.setAttribute(
+    "aria-expanded",
+    "true"
+  );
+}
+
+async function requestHostSuggestions(prefix) {
+  const requestNumber =
+    ++state.hostSuggestionRequest;
+
+  const parameters = new URLSearchParams({
+    q: prefix,
+    limit: "10"
+  });
+
+  try {
+    const hosts = await fetchJson(
+      `/api/v1/hosts/suggestions?`
+      + parameters.toString()
+    );
+
+    if (
+      requestNumber
+      !== state.hostSuggestionRequest
+    ) {
+      return;
+    }
+
+    renderHostSuggestions(hosts);
+  } catch (error) {
+    if (
+      requestNumber
+      === state.hostSuggestionRequest
+    ) {
+      closeHostSuggestions();
+      showToast(
+        `Unable to load hosts: ${error.message}`,
+        true
+      );
+    }
+  }
+}
+
+function scheduleHostSuggestions() {
+  window.clearTimeout(
+    state.hostSuggestionTimer
+  );
+
+  const prefix =
+    elements.hostFilter.value.trim();
+
+  if (!prefix) {
+    closeHostSuggestions();
+    return;
+  }
+
+  state.hostSuggestionTimer =
+    window.setTimeout(
+      () => requestHostSuggestions(prefix),
+      250
+    );
 }
 
 async function fetchJson(url) {
@@ -923,10 +1455,15 @@ function openIncidentDrawer(incident) {
 }
 
 function renderRuns(runs) {
-  state.runs = runs;
+  const selectedLimit = Number(
+    elements.limitFilter.value
+  );
+  const visibleRuns = runs.slice(0, selectedLimit);
+
+  state.runs = visibleRuns;
   elements.tableBody.replaceChildren();
 
-  if (!runs.length) {
+  if (!visibleRuns.length) {
     elements.tableMessage.hidden = false;
     elements.tableMessage.textContent =
       "No runs match the selected filters.";
@@ -1003,108 +1540,381 @@ function addDetailItem(container, label, value) {
   container.appendChild(item);
 }
 
-function openRunDrawer(run) {
-  elements.drawerTitle.textContent = `Run #${run.run_id}`;
+function humanizeDiagnosticKey(key) {
+  return key
+    .replaceAll("_", " ")
+    .replace(
+      /\b\w/g,
+      character => character.toUpperCase()
+    );
+}
+
+function formatDiagnosticValue(key, value) {
+  if (value === null || value === undefined) {
+    return "—";
+  }
+
+  if (typeof value === "boolean") {
+    return value ? "Yes" : "No";
+  }
+
+  if (Array.isArray(value)) {
+    return value.length
+      ? value.join(", ")
+      : "None";
+  }
+
+  if (typeof value === "number") {
+    const formatted = Number.isInteger(value)
+      ? String(value)
+      : value.toFixed(2);
+
+    if (key.endsWith("_percent")) {
+      return `${formatted}%`;
+    }
+
+    if (key.endsWith("_ms")) {
+      return `${formatted} ms`;
+    }
+
+    if (key.endsWith("_mb")) {
+      return `${formatted} MB`;
+    }
+
+    if (key.endsWith("_seconds")) {
+      return `${formatted} seconds`;
+    }
+
+    return formatted;
+  }
+
+  if (
+    key.endsWith("_at")
+    && typeof value === "string"
+  ) {
+    try {
+      return formatDate(value);
+    } catch {
+      return value;
+    }
+  }
+
+  return String(value);
+}
+
+function createDiagnosticCard(
+  title,
+  status,
+  record
+) {
+  const card = createElement(
+    "article",
+    "diagnostic-record"
+  );
+
+  const header = createElement(
+    "header",
+    "diagnostic-record__header"
+  );
+
+  header.appendChild(
+    createElement(
+      "strong",
+      "diagnostic-record__title",
+      title
+    )
+  );
+
+  if (status) {
+    header.appendChild(
+      createStatusChip(status)
+    );
+  }
+
+  card.appendChild(header);
+
+  const grid = createElement(
+    "div",
+    "diagnostic-record__grid"
+  );
+
+  for (
+    const [key, value]
+    of Object.entries(record)
+  ) {
+    const item = createElement(
+      "div",
+      "diagnostic-field"
+    );
+
+    if (
+      [
+        "description",
+        "error_message",
+        "failure_reason",
+        "path",
+        "target",
+        "resolved_address",
+        "pids"
+      ].includes(key)
+    ) {
+      item.classList.add(
+        "diagnostic-field--wide"
+      );
+    }
+
+    item.append(
+      createElement(
+        "span",
+        "diagnostic-field__label",
+        humanizeDiagnosticKey(key)
+      ),
+      createElement(
+        "strong",
+        "diagnostic-field__value",
+        formatDiagnosticValue(key, value)
+      )
+    );
+
+    grid.appendChild(item);
+  }
+
+  card.appendChild(grid);
+  return card;
+}
+
+function createDiagnosticGroup(
+  title,
+  overallStatus,
+  records,
+  getTitle,
+  emptyMessage
+) {
+  const section = createElement(
+    "section",
+    "detail-section diagnostic-group"
+  );
+
+  const heading = createElement(
+    "div",
+    "diagnostic-group__heading"
+  );
+
+  heading.appendChild(
+    createElement("h3", "", title)
+  );
+
+  if (overallStatus) {
+    heading.appendChild(
+      createStatusChip(overallStatus)
+    );
+  }
+
+  section.appendChild(heading);
+
+  const list = createElement(
+    "div",
+    "diagnostic-records"
+  );
+
+  if (!records.length) {
+    list.appendChild(
+      createElement(
+        "div",
+        "diagnostic-empty",
+        emptyMessage
+      )
+    );
+  } else {
+    for (const record of records) {
+      const status = (
+        record.health_status
+        || record.severity
+        || null
+      );
+
+      list.appendChild(
+        createDiagnosticCard(
+          getTitle(record),
+          status,
+          record
+        )
+      );
+    }
+  }
+
+  section.appendChild(list);
+  return section;
+}
+
+function renderRunDetails(payload) {
+  const run = payload.run;
+  const diagnostics = payload.diagnostics;
+
+  elements.drawerTitle.textContent =
+    `Run #${run.run_id}`;
+
   elements.drawerContent.replaceChildren();
+
+  const metadata = {
+    run_id: run.run_id,
+    generated_at: run.generated_at,
+    report_generated_at:
+      diagnostics.generated_at,
+    host_name: diagnostics.host_name,
+    overall_status:
+      diagnostics.overall_status,
+    bundle_id: run.bundle_id,
+    archive_path: run.archive_path
+  };
 
   const summarySection = createElement(
     "section",
-    "detail-section"
-  );
-  summarySection.appendChild(
-    createElement("h3", "", "Summary")
+    "detail-section diagnostic-group"
   );
 
-  const detailGrid = createElement(
+  const summaryHeading = createElement(
     "div",
-    "detail-grid"
+    "diagnostic-group__heading"
   );
 
-  addDetailItem(
-    detailGrid,
-    "Generated",
-    formatDate(run.generated_at)
-  );
-  addDetailItem(detailGrid, "Host", run.host_name);
-  addDetailItem(
-    detailGrid,
-    "Overall",
-    run.overall_status
-  );
-  addDetailItem(
-    detailGrid,
-    "Incidents",
-    String(run.incident_count)
+  summaryHeading.append(
+    createElement("h3", "", "Run summary"),
+    createStatusChip(
+      diagnostics.overall_status
+    )
   );
 
-  summarySection.appendChild(detailGrid);
-
-  const componentsSection = createElement(
-    "section",
-    "detail-section"
+  summarySection.append(
+    summaryHeading,
+    createDiagnosticCard(
+      "Monitoring run",
+      diagnostics.overall_status,
+      metadata
+    ),
+    createDiagnosticCard(
+      "Health summary",
+      diagnostics.overall_status,
+      diagnostics.summary
+    )
   );
-  componentsSection.appendChild(
-    createElement("h3", "", "Component health")
-  );
 
-  const componentList = createElement(
-    "div",
-    "component-list"
-  );
-
-  const components = {
-    System: run.system_status,
-    Network: run.network_status,
-    Services: run.service_status,
-    Processes: run.process_status,
-    Logs: run.log_status
-  };
-
-  for (const [label, status] of Object.entries(components)) {
-    const row = document.createElement("div");
-    row.append(
-      createElement("span", "", label),
-      createStatusChip(status)
+  const systemSection =
+    createDiagnosticGroup(
+      "System metrics",
+      diagnostics.system.overall_status,
+      diagnostics.system.metrics || [],
+      metric => (
+        metric.label || metric.metric_name
+      ),
+      "No system metrics were recorded."
     );
-    componentList.appendChild(row);
-  }
 
-  componentsSection.appendChild(componentList);
+  const networkSection =
+    createDiagnosticGroup(
+      "Network checks",
+      diagnostics.network.overall_status,
+      diagnostics.network.checks || [],
+      check => (
+        `${check.check_type}: ${check.target}`
+      ),
+      "No network checks were recorded."
+    );
 
-  const artifactsSection = createElement(
-    "section",
-    "detail-section"
-  );
-  artifactsSection.appendChild(
-    createElement("h3", "", "Diagnostic artifacts")
-  );
+  const serviceSection =
+    createDiagnosticGroup(
+      "Service checks",
+      diagnostics.services.overall_status,
+      diagnostics.services.records || [],
+      service => (
+        service.label
+        || service.service_name
+      ),
+      "No services were configured."
+    );
 
-  const artifactsGrid = createElement(
-    "div",
-    "detail-grid"
-  );
+  const processSection =
+    createDiagnosticGroup(
+      "Process checks",
+      diagnostics.processes.overall_status,
+      diagnostics.processes.records || [],
+      process => (
+        process.label
+        || process.process_name
+      ),
+      "No processes were configured."
+    );
 
-  addDetailItem(
-    artifactsGrid,
-    "Bundle ID",
-    run.bundle_id
-  );
-  addDetailItem(
-    artifactsGrid,
-    "Archive",
-    run.archive_path
-  );
+  const logSection =
+    createDiagnosticGroup(
+      "Log analysis",
+      diagnostics.logs.overall_status,
+      diagnostics.logs.records || [],
+      log => (
+        log.label || log.source_id
+      ),
+      "No log sources were configured."
+    );
 
-  artifactsSection.appendChild(artifactsGrid);
+  const incidentSection =
+    createDiagnosticGroup(
+      "Incident snapshot",
+      null,
+      diagnostics.incidents.records || [],
+      incident => incident.incident_id,
+      "No incidents were present in this run."
+    );
 
   elements.drawerContent.append(
     summarySection,
-    componentsSection,
-    artifactsSection
+    systemSection,
+    networkSection,
+    serviceSection,
+    processSection,
+    logSection,
+    incidentSection
+  );
+}
+
+async function openRunDrawer(run) {
+  elements.drawerTitle.textContent =
+    `Run #${run.run_id}`;
+
+  elements.drawerContent.replaceChildren(
+    createElement(
+      "div",
+      "run-details-loading",
+      "Loading real diagnostic data from ZIP…"
+    )
   );
 
-  elements.drawer.classList.add("drawer--open");
-  elements.drawer.setAttribute("aria-hidden", "false");
+  elements.drawer.classList.add(
+    "drawer--open"
+  );
+  elements.drawer.setAttribute(
+    "aria-hidden",
+    "false"
+  );
+
+  try {
+    const details = await fetchJson(
+      `/api/v1/runs/${run.run_id}/details`
+    );
+
+    renderRunDetails(details);
+  } catch (error) {
+    elements.drawerContent.replaceChildren(
+      createElement(
+        "div",
+        "diagnostic-error",
+        `Unable to load ZIP details: ${
+          error.message
+        }`
+      )
+    );
+
+    showToast(error.message, true);
+  }
 }
 
 function closeRunDrawer() {
@@ -1233,6 +2043,63 @@ elements.filters.addEventListener(
   }
 );
 
+elements.hostFilter.addEventListener(
+  "input",
+  scheduleHostSuggestions
+);
+
+elements.hostSuggestionsButton.addEventListener(
+  "click",
+  () => {
+    window.clearTimeout(
+      state.hostSuggestionTimer
+    );
+
+    requestHostSuggestions(
+      elements.hostFilter.value.trim()
+    );
+  }
+);
+
+elements.hostFilter.addEventListener(
+  "keydown",
+  event => {
+    if (event.key === "Escape") {
+      closeHostSuggestions();
+      return;
+    }
+
+    if (
+      event.key === "ArrowDown"
+      && !elements.hostSuggestions.hidden
+    ) {
+      event.preventDefault();
+
+      const firstSuggestion =
+        elements.hostSuggestions.querySelector(
+          "button"
+        );
+
+      if (firstSuggestion) {
+        firstSuggestion.focus();
+      }
+    }
+  }
+);
+
+document.addEventListener(
+  "click",
+  event => {
+    if (
+      !elements.hostAutocomplete.contains(
+        event.target
+      )
+    ) {
+      closeHostSuggestions();
+    }
+  }
+);
+
 elements.clearFilters.addEventListener(
   "click",
   () => {
@@ -1265,12 +2132,26 @@ elements.clearIncidentFilters.addEventListener(
 
 elements.refreshButton.addEventListener(
   "click",
-  () => loadDashboard(true)
+  async () => {
+    connectLiveStream();
+    await loadDashboard(true);
+  }
 );
 
 elements.refreshInterval.addEventListener(
   "change",
   scheduleAutoRefresh
+);
+
+
+elements.limitFilter.addEventListener(
+  "change",
+  () => loadDashboard(false)
+);
+
+elements.statusFilter.addEventListener(
+  "change",
+  () => loadDashboard(false)
 );
 
 elements.exportButton.addEventListener(
@@ -1355,3 +2236,31 @@ document
 
 
 loadDashboard(false);
+
+window.setTimeout(
+  () => {
+    try {
+      connectLiveStream();
+      watchLatestRun();
+    } catch (error) {
+      console.error(
+        "Live dashboard startup failed.",
+        error
+      );
+    }
+  },
+  0
+);
+
+window.addEventListener(
+  "beforeunload",
+  () => {
+    if (state.liveSource) {
+      state.liveSource.close();
+    }
+
+    window.clearTimeout(
+      state.liveRunTimer
+    );
+  }
+);

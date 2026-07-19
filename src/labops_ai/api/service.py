@@ -74,3 +74,28 @@ class RunHistoryApiService:
             RunHistoryResponse.from_entry(entry)
             for entry in entries
         ]
+    def suggest_hosts(
+        self,
+        *,
+        prefix: str,
+        limit: int,
+    ) -> list[str]:
+        """Return matching host suggestions."""
+        suggestion_reader = getattr(
+            self.reader,
+            "suggest_hosts",
+            None,
+        )
+
+        if not callable(suggestion_reader):
+            raise TypeError(
+                "reader must provide callable "
+                "suggest_hosts."
+            )
+
+        return list(
+            suggestion_reader(
+                prefix=prefix,
+                limit=limit,
+            )
+        )

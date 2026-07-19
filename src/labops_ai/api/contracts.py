@@ -31,3 +31,10 @@ class RunHistoryReader(Protocol):
         host_name: str | None = None,
     ) -> tuple[RunHistoryEntry, ...]:
         """Return recent matching runs."""
+    def suggest_hosts(
+        self,
+        *,
+        prefix: str = "",
+        limit: int = 10,
+    ) -> tuple[str, ...]:
+        """Return recent hosts matching a prefix."""

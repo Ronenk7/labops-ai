@@ -177,6 +177,7 @@ def test_professional_dashboard_assets() -> None:
     assert "Operations overview" in dashboard.text
     assert "Incident Center" in dashboard.text
     assert "incident-filters" in dashboard.text
+    assert "host-suggestions-button" in dashboard.text
     assert stylesheet.status_code == 200
     assert "--orange" in stylesheet.text
     assert "Incident Center" in stylesheet.text
@@ -184,3 +185,6 @@ def test_professional_dashboard_assets() -> None:
     assert "renderTrend" in script.text
     assert "renderIncidents" in script.text
     assert "/api/v1/incidents/summary" in script.text
+    assert "/api/v1/hosts/suggestions" in script.text
+    assert "/details" in script.text
+    assert "renderRunDetails" in script.text

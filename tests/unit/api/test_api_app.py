@@ -140,6 +140,29 @@ class FakeHistoryReader:
         return matches[:limit]
 
 
+    def suggest_hosts(
+        self,
+        *,
+        prefix: str = "",
+        limit: int = 10,
+    ) -> tuple[str, ...]:
+        self._raise_when_configured()
+        normalized_prefix = prefix.casefold()
+        matches: list[str] = []
+
+        for entry in self.entries:
+            if not entry.host_name.casefold().startswith(
+                normalized_prefix
+            ):
+                continue
+
+            if entry.host_name not in matches:
+                matches.append(entry.host_name)
+
+        return tuple(matches[:limit])
+
+
+
 def build_client(
     reader: FakeHistoryReader,
 ) -> TestClient:
@@ -178,7 +201,7 @@ def test_health_endpoint() -> None:
     assert response.json() == {
         "service": "LabOps AI API",
         "status": "HEALTHY",
-        "version": "0.3.0",
+        "version": "0.5.0",
     }
 
 
@@ -303,3 +326,17 @@ def test_root_redirects_to_dashboard() -> None:
 
     assert response.status_code == 307
     assert response.headers["location"] == "/dashboard"
+
+def test_suggests_hosts_using_prefix() -> None:
+    response = build_client(
+        build_reader()
+    ).get(
+        "/api/v1/hosts/suggestions",
+        params={
+            "q": "k",
+            "limit": 10,
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json() == ["Kukner7"]

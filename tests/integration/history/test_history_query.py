@@ -166,7 +166,7 @@ class TestRunHistoryQuery:
         store, query = build_history_components(tmp_path)
         seed_history(store)
 
-        entry = query.get_latest(host_name=" LabHost ")
+        entry = query.get_latest(host_name=" labhost ")
 
         assert entry is not None
         assert entry.run_id == 2
@@ -226,7 +226,7 @@ class TestRunHistoryQuery:
         seed_history(store)
 
         entries = query.list_recent(
-            host_name="Kukner7"
+            host_name="kukner7"
         )
 
         assert tuple(
@@ -248,6 +248,24 @@ class TestRunHistoryQuery:
 
         assert len(entries) == 1
         assert entries[0].run_id == 3
+
+
+    def test_suggests_hosts_case_insensitively(
+        self,
+        tmp_path: Path,
+    ) -> None:
+        store, query = build_history_components(tmp_path)
+        seed_history(store)
+
+        assert query.suggest_hosts(
+            prefix="k",
+            limit=10,
+        ) == ("Kukner7",)
+
+        assert query.suggest_hosts(
+            prefix="",
+            limit=1,
+        ) == ("Kukner7",)
 
     def test_counts_runs_using_filters(
         self,

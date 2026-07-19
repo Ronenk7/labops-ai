@@ -304,6 +304,13 @@ ON monitoring_runs (
 );
 
 CREATE INDEX IF NOT EXISTS
+    idx_monitoring_runs_host_nocase
+ON monitoring_runs (
+    host_name COLLATE NOCASE,
+    generated_at DESC
+);
+
+CREATE INDEX IF NOT EXISTS
     idx_monitoring_runs_status
 ON monitoring_runs (
     overall_status,

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -184,3 +185,12 @@ class IncidentSummaryResponse(BaseModel):
     warning: int = Field(ge=0)
     critical: int = Field(ge=0)
     source_counts: dict[str, int]
+
+
+class RunDetailsResponse(BaseModel):
+    """Represent one run with its complete archived diagnostics."""
+
+    model_config = ConfigDict(frozen=True)
+
+    run: RunHistoryResponse
+    diagnostics: dict[str, Any]

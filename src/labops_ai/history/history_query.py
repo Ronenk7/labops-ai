@@ -17,6 +17,7 @@ from labops_ai.history.history_models import (
 
 
 _MAX_QUERY_LIMIT = 1000
+_MAX_HOST_SUGGESTION_LIMIT = 20
 
 
 class RunHistoryQueryError(RuntimeError):
@@ -50,6 +51,36 @@ def _normalize_limit(value: object) -> int:
         raise ValueError(
             "Run history query limit must not exceed "
             f"{_MAX_QUERY_LIMIT}."
+        )
+
+    return normalized_value
+
+
+def _normalize_host_suggestion_prefix(
+    value: object,
+) -> str:
+    """Validate and normalize a host suggestion prefix."""
+    if not isinstance(value, str):
+        raise TypeError(
+            "Host suggestion prefix must be a string."
+        )
+
+    return value.strip()
+
+
+def _normalize_host_suggestion_limit(
+    value: object,
+) -> int:
+    """Validate the host suggestion result limit."""
+    normalized_value = _normalize_positive_integer(
+        "Host suggestion limit",
+        value,
+    )
+
+    if normalized_value > _MAX_HOST_SUGGESTION_LIMIT:
+        raise ValueError(
+            "Host suggestion limit must not exceed "
+            f"{_MAX_HOST_SUGGESTION_LIMIT}."
         )
 
     return normalized_value
@@ -178,7 +209,7 @@ class RunHistoryQuery:
 
         if normalized_host_name is not None:
             query += """
-                WHERE host_name = ?
+                WHERE host_name COLLATE NOCASE = ?
             """
             parameters = (normalized_host_name,)
 
@@ -223,7 +254,7 @@ class RunHistoryQuery:
             parameters.append(normalized_status.value)
 
         if normalized_host_name is not None:
-            conditions.append("host_name = ?")
+            conditions.append("host_name COLLATE NOCASE = ?")
             parameters.append(normalized_host_name)
 
         query = """
@@ -268,6 +299,53 @@ class RunHistoryQuery:
             for row in rows
         )
 
+
+    def suggest_hosts(
+        self,
+        *,
+        prefix: str = "",
+        limit: int = 10,
+    ) -> tuple[str, ...]:
+        """Return recent distinct hosts matching a prefix."""
+        normalized_prefix = (
+            _normalize_host_suggestion_prefix(prefix)
+        )
+        normalized_limit = (
+            _normalize_host_suggestion_limit(limit)
+        )
+
+        escaped_prefix = (
+            normalized_prefix
+            .replace("~", "~~")
+            .replace("%", "~%")
+            .replace("_", "~_")
+        )
+
+        rows = self._fetch_all(
+            """
+            SELECT
+                host_name,
+                MAX(generated_at) AS latest_generated_at
+            FROM monitoring_runs
+            WHERE host_name LIKE ? ESCAPE '~'
+                COLLATE NOCASE
+            GROUP BY host_name COLLATE NOCASE
+            ORDER BY
+                latest_generated_at DESC,
+                host_name COLLATE NOCASE ASC
+            LIMIT ?
+            """,
+            (
+                f"{escaped_prefix}%",
+                normalized_limit,
+            ),
+        )
+
+        return tuple(
+            str(row["host_name"])
+            for row in rows
+        )
+
     def count_runs(
         self,
         *,
@@ -290,7 +368,7 @@ class RunHistoryQuery:
             parameters.append(normalized_status.value)
 
         if normalized_host_name is not None:
-            conditions.append("host_name = ?")
+            conditions.append("host_name COLLATE NOCASE = ?")
             parameters.append(normalized_host_name)
 
         query = """

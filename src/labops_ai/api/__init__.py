@@ -23,8 +23,14 @@ from labops_ai.api.schemas import (
     DashboardTrendPointResponse,
     IncidentResponse,
     IncidentSummaryResponse,
+    RunDetailsResponse,
     RunHistoryResponse,
     StatusDistributionResponse,
+)
+from labops_ai.api.run_details import (
+    DiagnosticArchiveError,
+    DiagnosticArchiveReader,
+    RunDetailsApiService,
 )
 from labops_ai.api.service import RunHistoryApiService
 
@@ -39,6 +45,10 @@ __all__ = [
     "IncidentApiService",
     "IncidentResponse",
     "IncidentSummaryResponse",
+    "DiagnosticArchiveError",
+    "DiagnosticArchiveReader",
+    "RunDetailsApiService",
+    "RunDetailsResponse",
     "RunHistoryApiService",
     "RunHistoryCsvReportBuilder",
     "RunHistoryReader",

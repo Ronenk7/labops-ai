@@ -89,6 +89,172 @@
       </div>
     </section>
 
+<section
+  id="live-pulse"
+  class="live-pulse"
+  aria-label="Live operations metrics"
+>
+  <div class="live-pulse__glow"></div>
+
+  <header class="live-pulse__header">
+    <div>
+      <p class="live-pulse__eyebrow">
+        <span class="live-beacon"></span>
+        Live operations
+      </p>
+      <h2>Infrastructure pulse</h2>
+      <p>
+        Lightweight host telemetry streaming
+        directly from the monitored system.
+      </p>
+    </div>
+
+    <div
+      id="live-stream-state"
+      class="live-stream-state"
+    >
+      Connecting to live stream
+    </div>
+  </header>
+
+  <div class="live-pulse__body">
+    <article
+      id="live-core"
+      class="live-core"
+    >
+      <div class="live-orbit">
+        <div id="live-orb" class="live-orb">
+          <span>Live pressure</span>
+          <strong id="live-pressure">—</strong>
+          <small id="live-status">Connecting</small>
+        </div>
+      </div>
+
+      <div class="live-core__meta">
+        <span>
+          Last signal
+          <strong id="live-sampled-at">—</strong>
+        </span>
+        <span>
+          Uptime
+          <strong id="live-uptime">—</strong>
+        </span>
+        <span>
+          Processes
+          <strong id="live-processes">—</strong>
+        </span>
+      </div>
+    </article>
+
+    <div class="live-gauge-grid">
+      <article
+        id="live-cpu-card"
+        class="live-gauge-card"
+        style="--value: 0"
+      >
+        <div class="live-gauge">
+          <strong id="live-cpu">0%</strong>
+        </div>
+        <div>
+          <span>CPU activity</span>
+          <small id="live-cpu-cores">
+            Waiting for signal
+          </small>
+        </div>
+        <svg
+          id="live-cpu-sparkline"
+          class="live-sparkline"
+          viewBox="0 0 100 28"
+          preserveAspectRatio="none"
+        ></svg>
+      </article>
+
+      <article
+        id="live-memory-card"
+        class="live-gauge-card"
+        style="--value: 0"
+      >
+        <div class="live-gauge">
+          <strong id="live-memory">0%</strong>
+        </div>
+        <div>
+          <span>Memory pressure</span>
+          <small>Current physical memory</small>
+        </div>
+        <svg
+          id="live-memory-sparkline"
+          class="live-sparkline"
+          viewBox="0 0 100 28"
+          preserveAspectRatio="none"
+        ></svg>
+      </article>
+
+      <article
+        id="live-disk-card"
+        class="live-gauge-card"
+        style="--value: 0"
+      >
+        <div class="live-gauge">
+          <strong id="live-disk">0%</strong>
+        </div>
+        <div>
+          <span>Disk occupancy</span>
+          <small>Root filesystem</small>
+        </div>
+        <svg
+          id="live-disk-sparkline"
+          class="live-sparkline"
+          viewBox="0 0 100 28"
+          preserveAspectRatio="none"
+        ></svg>
+      </article>
+    </div>
+
+    <article class="live-traffic">
+      <div class="live-traffic__header">
+        <div>
+          <span>Network flow</span>
+          <strong>Real-time throughput</strong>
+        </div>
+        <span class="live-wave">∿</span>
+      </div>
+
+      <div class="live-traffic__rates">
+        <div>
+          <span>Receive</span>
+          <strong id="live-network-rx">—</strong>
+        </div>
+        <div>
+          <span>Transmit</span>
+          <strong id="live-network-tx">—</strong>
+        </div>
+      </div>
+
+      <svg
+        id="live-network-sparkline"
+        class="live-network-sparkline"
+        viewBox="0 0 100 42"
+        preserveAspectRatio="none"
+      ></svg>
+
+      <div class="live-load">
+        <span>
+          Load 1m
+          <strong id="live-load-1">—</strong>
+        </span>
+        <span>
+          Load 5m
+          <strong id="live-load-5">—</strong>
+        </span>
+        <span>
+          Load 15m
+          <strong id="live-load-15">—</strong>
+        </span>
+      </div>
+    </article>
+  </div>
+</section>
+
     <section class="summary-grid" aria-label="Summary">
       <article class="summary-card">
         <div class="summary-card__icon summary-card__icon--orange">
@@ -467,12 +633,39 @@
       <form id="filters" class="filters">
         <label>
           <span>Host</span>
-          <input
-            id="host-filter"
-            type="search"
-            maxlength="255"
-            placeholder="All hosts"
+          <div
+            id="host-autocomplete"
+            class="host-autocomplete"
           >
+            <input
+              id="host-filter"
+              type="search"
+              maxlength="255"
+              placeholder="All hosts"
+              autocomplete="off"
+              spellcheck="false"
+              role="combobox"
+              aria-autocomplete="list"
+              aria-expanded="false"
+              aria-controls="host-suggestions"
+            >
+
+            <button
+              id="host-suggestions-button"
+              class="host-autocomplete__button"
+              type="button"
+              aria-label="Show recent hosts"
+            >
+              ▾
+            </button>
+
+            <ul
+              id="host-suggestions"
+              class="host-suggestions"
+              role="listbox"
+              hidden
+            ></ul>
+          </div>
         </label>
 
         <label>

@@ -25,18 +25,30 @@ from labops_ai.api.analytics import (
 from labops_ai.api.incident_service import (
     IncidentApiService,
 )
+from labops_ai.api.live_routes import (
+    build_live_router,
+)
 from labops_ai.api.reporting import (
     RunHistoryCsvReportBuilder,
+)
+from labops_ai.api.run_details import (
+    DiagnosticArchiveError,
+    DiagnosticArchiveReader,
+    RunDetailsApiService,
 )
 from labops_ai.api.schemas import (
     ApiHealthResponse,
     DashboardOverviewResponse,
     IncidentResponse,
     IncidentSummaryResponse,
+    RunDetailsResponse,
     RunHistoryResponse,
 )
 from labops_ai.api.service import RunHistoryApiService
 from labops_ai.health_status import HealthStatus
+from labops_ai.diagnostics import (
+    DiagnosticBundleConfigLoader,
+)
 from labops_ai.history import (
     RunHistoryConfigLoader,
     RunHistoryDatabase,
@@ -52,7 +64,7 @@ from labops_ai.incidents import (
 )
 
 
-API_VERSION = "0.3.0"
+API_VERSION = "0.5.0"
 DASHBOARD_DIRECTORY = FilePath(__file__).with_name(
     "dashboard"
 )
@@ -132,6 +144,7 @@ def _incidents_unavailable(
 def create_app(
     history_service: RunHistoryApiService | None = None,
     incident_service: IncidentApiService | None = None,
+    run_details_service: RunDetailsApiService | None = None,
 ) -> FastAPI:
     """Create the API with injectable history access."""
     service = (
@@ -161,6 +174,28 @@ def create_app(
             "IncidentApiService."
         )
 
+    details_service = (
+        run_details_service
+        if run_details_service is not None
+        else RunDetailsApiService(
+            history_service=service,
+            archive_reader=DiagnosticArchiveReader(
+                config=(
+                    DiagnosticBundleConfigLoader().load()
+                )
+            ),
+        )
+    )
+
+    if not isinstance(
+        details_service,
+        RunDetailsApiService,
+    ):
+        raise TypeError(
+            "run_details_service must be "
+            "a RunDetailsApiService."
+        )
+
     analytics = DashboardAnalyticsService(
         reader=service.reader
     )
@@ -174,6 +209,10 @@ def create_app(
         version=API_VERSION,
         docs_url="/docs",
         redoc_url="/redoc",
+    )
+
+    application.include_router(
+        build_live_router()
     )
 
     application.mount(
@@ -322,6 +361,30 @@ def create_app(
         return result
 
     @application.get(
+        "/api/v1/hosts/suggestions",
+        response_model=list[str],
+        tags=["hosts"],
+    )
+    def suggest_hosts(
+        q: Annotated[
+            str,
+            Query(max_length=255),
+        ] = "",
+        limit: Annotated[
+            int,
+            Query(ge=1, le=20),
+        ] = 10,
+    ) -> list[str]:
+        """Return limited server-side host suggestions."""
+        try:
+            return service.suggest_hosts(
+                prefix=q,
+                limit=limit,
+            )
+        except RunHistoryQueryError as error:
+            raise _history_unavailable(error) from error
+
+    @application.get(
         "/api/v1/runs/latest",
         response_model=RunHistoryResponse,
         tags=["runs"],
@@ -434,6 +497,41 @@ def create_app(
                 )
             },
         )
+
+    @application.get(
+        "/api/v1/runs/{run_id}/details",
+        response_model=RunDetailsResponse,
+        tags=["runs"],
+    )
+    def get_run_details(
+        run_id: Annotated[
+            int,
+            ApiPath(ge=1),
+        ],
+    ) -> RunDetailsResponse:
+        """Return real monitoring data from the run ZIP."""
+        try:
+            result = details_service.get_by_id(run_id)
+        except DiagnosticArchiveError as error:
+            raise HTTPException(
+                status_code=(
+                    http_status.HTTP_503_SERVICE_UNAVAILABLE
+                ),
+                detail=str(error),
+            ) from error
+        except RunHistoryQueryError as error:
+            raise _history_unavailable(error) from error
+
+        if result is None:
+            raise HTTPException(
+                status_code=http_status.HTTP_404_NOT_FOUND,
+                detail=(
+                    f"Monitoring run {run_id} "
+                    "was not found."
+                ),
+            )
+
+        return result
 
     @application.get(
         "/api/v1/runs/{run_id}",
