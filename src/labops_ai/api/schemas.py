@@ -7,6 +7,11 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from labops_ai.health_status import HealthStatus
 from labops_ai.history import RunHistoryEntry
+from labops_ai.incidents import (
+    IncidentRecord,
+    IncidentSourceType,
+    IncidentStatus,
+)
 
 
 class ApiHealthResponse(BaseModel):
@@ -120,3 +125,62 @@ class DashboardOverviewResponse(BaseModel):
     status_distribution: StatusDistributionResponse
     component_reliability: ComponentReliabilityResponse
     trend: list[DashboardTrendPointResponse]
+
+class IncidentResponse(BaseModel):
+    """Represent one persisted infrastructure incident."""
+
+    model_config = ConfigDict(frozen=True)
+
+    incident_id: str
+    source_type: IncidentSourceType
+    source_id: str
+    source_label: str
+    severity: HealthStatus
+    status: IncidentStatus
+    description: str
+    first_seen_at: datetime
+    last_seen_at: datetime
+    occurrence_count: int = Field(ge=1)
+    resolved_at: datetime | None
+    is_active: bool
+
+    @classmethod
+    def from_record(
+        cls,
+        record: IncidentRecord,
+    ) -> "IncidentResponse":
+        """Convert one domain incident record."""
+        if not isinstance(record, IncidentRecord):
+            raise TypeError(
+                "record must be an IncidentRecord."
+            )
+
+        return cls(
+            incident_id=record.incident_id,
+            source_type=record.source_type,
+            source_id=record.source_id,
+            source_label=record.source_label,
+            severity=record.severity,
+            status=record.status,
+            description=record.description,
+            first_seen_at=record.first_seen_at,
+            last_seen_at=record.last_seen_at,
+            occurrence_count=record.occurrence_count,
+            resolved_at=record.resolved_at,
+            is_active=record.is_active,
+        )
+
+
+class IncidentSummaryResponse(BaseModel):
+    """Represent aggregated incident lifecycle counts."""
+
+    model_config = ConfigDict(frozen=True)
+
+    total: int = Field(ge=0)
+    active: int = Field(ge=0)
+    open: int = Field(ge=0)
+    acknowledged: int = Field(ge=0)
+    resolved: int = Field(ge=0)
+    warning: int = Field(ge=0)
+    critical: int = Field(ge=0)
+    source_counts: dict[str, int]

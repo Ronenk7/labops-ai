@@ -22,12 +22,17 @@ from fastapi.staticfiles import StaticFiles
 from labops_ai.api.analytics import (
     DashboardAnalyticsService,
 )
+from labops_ai.api.incident_service import (
+    IncidentApiService,
+)
 from labops_ai.api.reporting import (
     RunHistoryCsvReportBuilder,
 )
 from labops_ai.api.schemas import (
     ApiHealthResponse,
     DashboardOverviewResponse,
+    IncidentResponse,
+    IncidentSummaryResponse,
     RunHistoryResponse,
 )
 from labops_ai.api.service import RunHistoryApiService
@@ -38,9 +43,16 @@ from labops_ai.history import (
     RunHistoryQuery,
     RunHistoryQueryError,
 )
+from labops_ai.incidents import (
+    IncidentManagementConfigLoader,
+    IncidentSourceType,
+    IncidentStatus,
+    IncidentStorageError,
+    JsonIncidentStore,
+)
 
 
-API_VERSION = "0.2.0"
+API_VERSION = "0.3.0"
 DASHBOARD_DIRECTORY = FilePath(__file__).with_name(
     "dashboard"
 )
@@ -60,6 +72,16 @@ def build_default_history_service(
     query = RunHistoryQuery(database=database)
 
     return RunHistoryApiService(reader=query)
+
+
+
+def build_default_incident_service(
+) -> IncidentApiService:
+    """Build the production JSON incident service."""
+    config = IncidentManagementConfigLoader().load()
+    store = JsonIncidentStore(config=config.storage)
+
+    return IncidentApiService(reader=store)
 
 
 def _normalize_host_name(
@@ -94,8 +116,22 @@ def _history_unavailable(
     )
 
 
+
+def _incidents_unavailable(
+    error: IncidentStorageError,
+) -> HTTPException:
+    """Convert incident storage failures into HTTP 503."""
+    return HTTPException(
+        status_code=(
+            http_status.HTTP_503_SERVICE_UNAVAILABLE
+        ),
+        detail="Incident data is temporarily unavailable.",
+    )
+
+
 def create_app(
     history_service: RunHistoryApiService | None = None,
+    incident_service: IncidentApiService | None = None,
 ) -> FastAPI:
     """Create the API with injectable history access."""
     service = (
@@ -108,6 +144,21 @@ def create_app(
         raise TypeError(
             "history_service must be a "
             "RunHistoryApiService."
+        )
+
+    incident_api_service = (
+        incident_service
+        if incident_service is not None
+        else build_default_incident_service()
+    )
+
+    if not isinstance(
+        incident_api_service,
+        IncidentApiService,
+    ):
+        raise TypeError(
+            "incident_service must be an "
+            "IncidentApiService."
         )
 
     analytics = DashboardAnalyticsService(
@@ -197,6 +248,78 @@ def create_app(
             )
         except RunHistoryQueryError as error:
             raise _history_unavailable(error) from error
+
+    @application.get(
+        "/api/v1/incidents/summary",
+        response_model=IncidentSummaryResponse,
+        tags=["incidents"],
+    )
+    def get_incident_summary(
+    ) -> IncidentSummaryResponse:
+        """Return incident lifecycle statistics."""
+        try:
+            return incident_api_service.get_summary()
+        except IncidentStorageError as error:
+            raise _incidents_unavailable(error) from error
+
+    @application.get(
+        "/api/v1/incidents",
+        response_model=list[IncidentResponse],
+        tags=["incidents"],
+    )
+    def list_incidents(
+        limit: Annotated[
+            int,
+            Query(ge=1, le=200),
+        ] = 50,
+        incident_status: Annotated[
+            IncidentStatus | None,
+            Query(alias="status"),
+        ] = None,
+        severity: HealthStatus | None = None,
+        source_type: IncidentSourceType | None = None,
+        active_only: bool | None = None,
+    ) -> list[IncidentResponse]:
+        """Return filtered infrastructure incidents."""
+        try:
+            return incident_api_service.list_incidents(
+                limit=limit,
+                status=incident_status,
+                severity=severity,
+                source_type=source_type,
+                active_only=active_only,
+            )
+        except IncidentStorageError as error:
+            raise _incidents_unavailable(error) from error
+
+    @application.get(
+        "/api/v1/incidents/{incident_id}",
+        response_model=IncidentResponse,
+        tags=["incidents"],
+    )
+    def get_incident_by_id(
+        incident_id: Annotated[
+            str,
+            ApiPath(min_length=1, max_length=128),
+        ],
+    ) -> IncidentResponse:
+        """Return one incident by identifier."""
+        try:
+            result = incident_api_service.get_by_id(
+                incident_id
+            )
+        except IncidentStorageError as error:
+            raise _incidents_unavailable(error) from error
+
+        if result is None:
+            raise HTTPException(
+                status_code=http_status.HTTP_404_NOT_FOUND,
+                detail=(
+                    f"Incident {incident_id} was not found."
+                ),
+            )
+
+        return result
 
     @application.get(
         "/api/v1/runs/latest",

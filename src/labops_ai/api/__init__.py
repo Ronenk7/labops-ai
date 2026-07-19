@@ -2,10 +2,14 @@
 from labops_ai.api.analytics import (
     DashboardAnalyticsService,
 )
+from labops_ai.api.incident_service import (
+    IncidentApiService,
+)
 from labops_ai.api.app import (
     API_VERSION,
     app,
     build_default_history_service,
+    build_default_incident_service,
     create_app,
 )
 from labops_ai.api.contracts import RunHistoryReader
@@ -17,6 +21,8 @@ from labops_ai.api.schemas import (
     ComponentReliabilityResponse,
     DashboardOverviewResponse,
     DashboardTrendPointResponse,
+    IncidentResponse,
+    IncidentSummaryResponse,
     RunHistoryResponse,
     StatusDistributionResponse,
 )
@@ -30,6 +36,9 @@ __all__ = [
     "DashboardAnalyticsService",
     "DashboardOverviewResponse",
     "DashboardTrendPointResponse",
+    "IncidentApiService",
+    "IncidentResponse",
+    "IncidentSummaryResponse",
     "RunHistoryApiService",
     "RunHistoryCsvReportBuilder",
     "RunHistoryReader",
@@ -37,5 +46,6 @@ __all__ = [
     "StatusDistributionResponse",
     "app",
     "build_default_history_service",
+    "build_default_incident_service",
     "create_app",
 ]

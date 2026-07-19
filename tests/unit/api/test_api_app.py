@@ -178,7 +178,7 @@ def test_health_endpoint() -> None:
     assert response.json() == {
         "service": "LabOps AI API",
         "status": "HEALTHY",
-        "version": "0.2.0",
+        "version": "0.3.0",
     }
 
 
