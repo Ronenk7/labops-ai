@@ -1,0 +1,18 @@
+{
+  "output": {
+    "directory": "runtime/diagnostic_bundles",
+    "archive_prefix": "labops-diagnostic",
+    "timestamp_format": "%Y%m%dT%H%M%SZ"
+  },
+  "collection": {
+    "include_json_report": true,
+    "include_text_report": true,
+    "include_incident_snapshot": true
+  },
+  "files": {
+    "manifest_name": "manifest.json",
+    "json_report_name": "diagnostic_report.json",
+    "text_report_name": "diagnostic_report.txt",
+    "incident_snapshot_name": "incidents.json"
+  }
+}
