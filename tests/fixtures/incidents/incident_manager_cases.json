@@ -1,0 +1,86 @@
+{
+  "identifier": {
+    "prefix": "INC",
+    "separator": "-",
+    "sequence_width": 6
+  },
+  "warning_signal": {
+    "source_type": "SERVICE",
+    "source_id": "systemd-journald.service",
+    "source_label": "System Journal",
+    "severity": "WARNING",
+    "description": "Service is transitioning.",
+    "observed_at": "2026-07-19T10:02:00+00:00"
+  },
+  "critical_signal": {
+    "source_type": "SERVICE",
+    "source_id": "systemd-journald.service",
+    "source_label": "System Journal",
+    "severity": "CRITICAL",
+    "description": "Service has failed.",
+    "observed_at": "2026-07-19T10:03:00+00:00"
+  },
+  "later_warning_signal": {
+    "source_type": "SERVICE",
+    "source_id": "systemd-journald.service",
+    "source_label": "System Journal",
+    "severity": "WARNING",
+    "description": "Service is recovering.",
+    "observed_at": "2026-07-19T10:04:00+00:00"
+  },
+  "healthy_signal": {
+    "source_type": "SERVICE",
+    "source_id": "systemd-journald.service",
+    "source_label": "System Journal",
+    "severity": "HEALTHY",
+    "description": "Service returned to normal.",
+    "observed_at": "2026-07-19T10:05:00+00:00"
+  },
+  "network_warning_signal": {
+    "source_type": "NETWORK",
+    "source_id": "dns:www.cloudflare.com",
+    "source_label": "Cloudflare DNS",
+    "severity": "WARNING",
+    "description": "DNS latency exceeded the warning threshold.",
+    "observed_at": "2026-07-19T10:02:30+00:00"
+  },
+  "active_warning_incident": {
+    "incident_id": "INC-000001",
+    "source_type": "SERVICE",
+    "source_id": "systemd-journald.service",
+    "source_label": "System Journal",
+    "severity": "WARNING",
+    "status": "OPEN",
+    "description": "Service is transitioning.",
+    "first_seen_at": "2026-07-19T10:00:00+00:00",
+    "last_seen_at": "2026-07-19T10:01:00+00:00",
+    "occurrence_count": 1,
+    "resolved_at": null
+  },
+  "active_critical_incident": {
+    "incident_id": "INC-000001",
+    "source_type": "SERVICE",
+    "source_id": "systemd-journald.service",
+    "source_label": "System Journal",
+    "severity": "CRITICAL",
+    "status": "OPEN",
+    "description": "Service has failed.",
+    "first_seen_at": "2026-07-19T10:00:00+00:00",
+    "last_seen_at": "2026-07-19T10:03:00+00:00",
+    "occurrence_count": 2,
+    "resolved_at": null
+  },
+  "acknowledged_incident": {
+    "incident_id": "INC-000001",
+    "source_type": "SERVICE",
+    "source_id": "systemd-journald.service",
+    "source_label": "System Journal",
+    "severity": "WARNING",
+    "status": "ACKNOWLEDGED",
+    "description": "Service is transitioning.",
+    "first_seen_at": "2026-07-19T10:00:00+00:00",
+    "last_seen_at": "2026-07-19T10:01:00+00:00",
+    "occurrence_count": 1,
+    "resolved_at": null
+  }
+}

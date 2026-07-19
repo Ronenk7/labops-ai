@@ -1,0 +1,43 @@
+{
+  "signal": {
+    "source_type": "SERVICE",
+    "source_id": "systemd-journald.service",
+    "source_label": "System Journal",
+    "severity": "CRITICAL",
+    "description": "Service is not running.",
+    "observed_at": "2026-07-19T09:00:00+03:00"
+  },
+  "healthy_signal": {
+    "source_type": "SERVICE",
+    "source_id": "systemd-journald.service",
+    "source_label": "System Journal",
+    "severity": "HEALTHY",
+    "description": "Service returned to normal.",
+    "observed_at": "2026-07-19T09:05:00+03:00"
+  },
+  "active_incident": {
+    "incident_id": "INC-000001",
+    "source_type": "SERVICE",
+    "source_id": "systemd-journald.service",
+    "source_label": "System Journal",
+    "severity": "CRITICAL",
+    "status": "OPEN",
+    "description": "Service is not running.",
+    "first_seen_at": "2026-07-19T09:00:00+03:00",
+    "last_seen_at": "2026-07-19T09:02:00+03:00",
+    "occurrence_count": 2
+  },
+  "resolved_incident": {
+    "incident_id": "INC-000001",
+    "source_type": "SERVICE",
+    "source_id": "systemd-journald.service",
+    "source_label": "System Journal",
+    "severity": "CRITICAL",
+    "status": "RESOLVED",
+    "description": "Service is not running.",
+    "first_seen_at": "2026-07-19T09:00:00+03:00",
+    "last_seen_at": "2026-07-19T09:02:00+03:00",
+    "occurrence_count": 2,
+    "resolved_at": "2026-07-19T09:05:00+03:00"
+  }
+}

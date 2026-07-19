@@ -1,0 +1,20 @@
+{
+  "valid_configuration": {
+    "decimal_places": 2,
+    "system_description_template": "{label}: value={value}%, severity={severity}.",
+    "network_label_template": "{check_type} {target}",
+    "network_success_description_template": "{check_type} check for {target}: latency={latency_ms} ms, severity={severity}.",
+    "network_failure_description_template": "{check_type} check for {target}: severity={severity}, failure={details}.",
+    "service_state_description_template": "{label}: status={status}, severity={severity}, load={load_state}, active={active_state}, sub={sub_state}.",
+    "service_failure_description_template": "{label}: status={status}, severity={severity}, failure={details}.",
+    "process_running_description_template": "{label}: status={status}, severity={severity}, instances={instances}, CPU={cpu_percent}%, memory={memory_mb} MB, longest runtime={longest_runtime_seconds} seconds.",
+    "process_not_running_description_template": "{label}: status={status}, severity={severity}.",
+    "process_failure_description_template": "{label}: status={status}, severity={severity}, failure={details}.",
+    "log_analyzed_description_template": "{label}: status={status}, severity={severity}, lines scanned={lines_scanned}, matches={matches}.",
+    "log_failure_description_template": "{label}: status={status}, severity={severity}, failure={details}.",
+    "failure_reason_template": "{reason}",
+    "failure_with_message_template": "{reason}: {message}"
+  },
+  "invalid_json_text": "{\"decimal_places\":",
+  "missing_file_name": "missing_incident_signals.json"
+}

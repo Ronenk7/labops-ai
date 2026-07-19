@@ -1,0 +1,76 @@
+{
+  "valid_storage": {
+    "path": "runtime/incidents.json"
+  },
+  "valid_identifier": {
+    "prefix": "inc",
+    "separator": "-",
+    "sequence_width": 6
+  },
+  "invalid_prefixes": [
+    {
+      "case_id": "prefix-with-whitespace",
+      "value": "INC ID"
+    },
+    {
+      "case_id": "prefix-with-symbol",
+      "value": "INC!"
+    }
+  ],
+  "invalid_separators": [
+    {
+      "case_id": "alphanumeric-separator",
+      "value": "A"
+    },
+    {
+      "case_id": "whitespace-separator",
+      "value": " "
+    },
+    {
+      "case_id": "multiple-character-separator",
+      "value": "--"
+    }
+  ],
+  "invalid_sequence_widths": [
+    {
+      "case_id": "zero-width",
+      "value": 0
+    },
+    {
+      "case_id": "excessive-width",
+      "value": 13
+    },
+    {
+      "case_id": "string-width",
+      "value": "6"
+    },
+    {
+      "case_id": "boolean-width",
+      "value": true
+    }
+  ],
+  "valid_report": {
+    "title": "LabOps AI - Incident Management",
+    "separator": "-----------------------------------",
+    "actions_label": "Actions",
+    "created_label": "Created",
+    "updated_label": "Updated",
+    "resolved_actions_label": "Resolved",
+    "unchanged_label": "Unchanged",
+    "active_count_label": "Active incidents",
+    "resolved_count_label": "Resolved incidents",
+    "incident_label": "Incident",
+    "incident_id_label": "Incident ID",
+    "source_type_label": "Source type",
+    "source_id_label": "Source ID",
+    "source_label": "Source",
+    "severity_label": "Severity",
+    "status_label": "Status",
+    "description_label": "Description",
+    "first_seen_label": "First seen",
+    "last_seen_label": "Last seen",
+    "occurrences_label": "Occurrences",
+    "resolved_at_label": "Resolved at",
+    "no_incidents_message": "No incidents are currently recorded."
+  }
+}

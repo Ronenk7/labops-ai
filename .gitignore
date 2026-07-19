@@ -25,6 +25,9 @@ private_docs/
 # Log files
 *.log
 
+# Runtime application state
+runtime/
+
 # Operating system files
 .DS_Store
 Thumbs.db

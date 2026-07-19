@@ -1,0 +1,59 @@
+{
+  "observed_at": "2026-07-19T10:30:00+03:00",
+  "system": {
+    "metrics": {
+      "cpu_percent": 75.126,
+      "memory_percent": 42.5,
+      "disk_percent": 91.999
+    },
+    "statuses": {
+      "cpu_percent": "WARNING",
+      "memory_percent": "HEALTHY",
+      "disk_percent": "CRITICAL"
+    },
+    "labels": {
+      "cpu_percent": "CPU usage",
+      "memory_percent": "Memory usage",
+      "disk_percent": "Disk usage"
+    },
+    "expected_descriptions": [
+      "CPU usage: value=75.13%, severity=WARNING.",
+      "Memory usage: value=42.50%, severity=HEALTHY.",
+      "Disk usage: value=92.00%, severity=CRITICAL."
+    ]
+  },
+  "network": {
+    "dns_target": "www.cloudflare.com",
+    "dns_latency_ms": 12.345,
+    "tcp_target": "1.1.1.1:443",
+    "tcp_error": "Connection timed out.",
+    "expected_dns_description": "DNS check for www.cloudflare.com: latency=12.35 ms, severity=HEALTHY.",
+    "expected_tcp_description": "TCP check for 1.1.1.1:443: severity=CRITICAL, failure=TIMEOUT: Connection timed out."
+  },
+  "service": {
+    "active_name": "systemd-journald.service",
+    "active_label": "System Journal",
+    "error_name": "example.service",
+    "error_label": "Example Service",
+    "error_message": "systemctl timed out.",
+    "expected_active_description": "System Journal: status=ACTIVE, severity=HEALTHY, load=loaded, active=active, sub=running.",
+    "expected_error_description": "Example Service: status=CHECK_ERROR, severity=CRITICAL, failure=TIMEOUT: systemctl timed out."
+  },
+  "process": {
+    "running_name": "python",
+    "running_label": "Python Runtime",
+    "missing_name": "worker",
+    "missing_label": "Background Worker",
+    "expected_running_description": "Python Runtime: status=RUNNING, severity=WARNING, instances=1, CPU=75.50%, memory=450.25 MB, longest runtime=1000.00 seconds.",
+    "expected_missing_description": "Background Worker: status=NOT_RUNNING, severity=CRITICAL."
+  },
+  "log": {
+    "analyzed_id": "application",
+    "analyzed_label": "Application Log",
+    "error_id": "system",
+    "error_label": "System Log",
+    "error_message": "Log file was not found.",
+    "expected_analyzed_description": "Application Log: status=ANALYZED, severity=WARNING, lines scanned=10, matches=1.",
+    "expected_error_description": "System Log: status=CHECK_ERROR, severity=WARNING, failure=FILE_NOT_FOUND: Log file was not found."
+  }
+}

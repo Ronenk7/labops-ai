@@ -1,0 +1,34 @@
+{
+  "storage": {
+    "path": "runtime/incidents.json"
+  },
+  "identifier": {
+    "prefix": "INC",
+    "separator": "-",
+    "sequence_width": 6
+  },
+  "report": {
+    "title": "LabOps AI - Incident Management",
+    "separator": "-----------------------------------",
+    "actions_label": "Actions",
+    "created_label": "Created",
+    "updated_label": "Updated",
+    "resolved_actions_label": "Resolved",
+    "unchanged_label": "Unchanged",
+    "active_count_label": "Active incidents",
+    "resolved_count_label": "Resolved incidents",
+    "incident_label": "Incident",
+    "incident_id_label": "Incident ID",
+    "source_type_label": "Source type",
+    "source_id_label": "Source ID",
+    "source_label": "Source",
+    "severity_label": "Severity",
+    "status_label": "Status",
+    "description_label": "Description",
+    "first_seen_label": "First seen",
+    "last_seen_label": "Last seen",
+    "occurrences_label": "Occurrences",
+    "resolved_at_label": "Resolved at",
+    "no_incidents_message": "No incidents are currently recorded."
+  }
+}

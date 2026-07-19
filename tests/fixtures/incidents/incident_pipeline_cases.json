@@ -1,0 +1,17 @@
+{
+  "observed_at": "2026-07-19T13:30:00+03:00",
+  "warning_signal": {
+    "source_type": "SERVICE",
+    "source_id": "systemd-journald.service",
+    "source_label": "System Journal",
+    "severity": "WARNING",
+    "description": "System Journal requires attention."
+  },
+  "healthy_signal": {
+    "source_type": "NETWORK",
+    "source_id": "dns:www.cloudflare.com",
+    "source_label": "Cloudflare DNS",
+    "severity": "HEALTHY",
+    "description": "Cloudflare DNS is healthy."
+  }
+}

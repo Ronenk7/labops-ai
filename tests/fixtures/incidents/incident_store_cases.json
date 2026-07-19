@@ -1,0 +1,70 @@
+{
+  "identifier": {
+    "prefix": "INC",
+    "separator": "-",
+    "sequence_width": 6
+  },
+  "active_incident": {
+    "incident_id": "INC-000001",
+    "source_type": "SERVICE",
+    "source_id": "systemd-journald.service",
+    "source_label": "System Journal",
+    "severity": "CRITICAL",
+    "status": "OPEN",
+    "description": "Service is not running.",
+    "first_seen_at": "2026-07-19T06:00:00+00:00",
+    "last_seen_at": "2026-07-19T06:02:00+00:00",
+    "occurrence_count": 2,
+    "resolved_at": null
+  },
+  "resolved_incident": {
+    "incident_id": "INC-000002",
+    "source_type": "NETWORK",
+    "source_id": "dns:www.cloudflare.com",
+    "source_label": "Cloudflare DNS",
+    "severity": "WARNING",
+    "status": "RESOLVED",
+    "description": "DNS latency exceeded the warning threshold.",
+    "first_seen_at": "2026-07-19T05:00:00+00:00",
+    "last_seen_at": "2026-07-19T05:02:00+00:00",
+    "occurrence_count": 3,
+    "resolved_at": "2026-07-19T05:05:00+00:00"
+  },
+  "invalid_payloads": [
+    {
+      "case_id": "unsupported-schema",
+      "payload": {
+        "schema_version": 2,
+        "next_sequence": 1,
+        "incidents": []
+      },
+      "expected_message": "schema version is unsupported"
+    },
+    {
+      "case_id": "invalid-next-sequence",
+      "payload": {
+        "schema_version": 1,
+        "next_sequence": 0,
+        "incidents": []
+      },
+      "expected_message": "storage state is invalid"
+    },
+    {
+      "case_id": "incidents-not-array",
+      "payload": {
+        "schema_version": 1,
+        "next_sequence": 1,
+        "incidents": {}
+      },
+      "expected_message": "must be a JSON array"
+    },
+    {
+      "case_id": "missing-root-key",
+      "payload": {
+        "schema_version": 1,
+        "next_sequence": 1
+      },
+      "expected_message": "Missing required keys"
+    }
+  ]
+}
