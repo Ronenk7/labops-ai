@@ -2,7 +2,11 @@
 
 const state = {
   runs: [],
+  incidents: [],
   overview: null,
+  incidentSummary: null,
+  incidentSortKey: "last_seen_at",
+  incidentSortDirection: "desc",
   sortKey: "generated_at",
   sortDirection: "desc",
   refreshTimer: null,
@@ -33,6 +37,66 @@ const elements = {
   warningCount: document.querySelector("#warning-count"),
   criticalCount: document.querySelector("#critical-count"),
   reliabilityList: document.querySelector("#reliability-list"),
+  incidentCenterLabel: document.querySelector(
+    "#incident-center-label"
+  ),
+  incidentActiveCount: document.querySelector(
+    "#incident-active-count"
+  ),
+  incidentCriticalCount: document.querySelector(
+    "#incident-critical-count"
+  ),
+  incidentAcknowledgedCount: document.querySelector(
+    "#incident-acknowledged-count"
+  ),
+  incidentResolvedCount: document.querySelector(
+    "#incident-resolved-count"
+  ),
+  sourceSystemCount: document.querySelector(
+    "#source-system-count"
+  ),
+  sourceNetworkCount: document.querySelector(
+    "#source-network-count"
+  ),
+  sourceServiceCount: document.querySelector(
+    "#source-service-count"
+  ),
+  sourceProcessCount: document.querySelector(
+    "#source-process-count"
+  ),
+  sourceLogCount: document.querySelector(
+    "#source-log-count"
+  ),
+  incidentResultCount: document.querySelector(
+    "#incident-result-count"
+  ),
+  incidentFilters: document.querySelector(
+    "#incident-filters"
+  ),
+  incidentStatusFilter: document.querySelector(
+    "#incident-status-filter"
+  ),
+  incidentSeverityFilter: document.querySelector(
+    "#incident-severity-filter"
+  ),
+  incidentSourceFilter: document.querySelector(
+    "#incident-source-filter"
+  ),
+  incidentActiveFilter: document.querySelector(
+    "#incident-active-filter"
+  ),
+  incidentLimitFilter: document.querySelector(
+    "#incident-limit-filter"
+  ),
+  clearIncidentFilters: document.querySelector(
+    "#clear-incident-filters"
+  ),
+  incidentTableBody: document.querySelector(
+    "#incident-table-body"
+  ),
+  incidentTableMessage: document.querySelector(
+    "#incident-table-message"
+  ),
   filters: document.querySelector("#filters"),
   hostFilter: document.querySelector("#host-filter"),
   statusFilter: document.querySelector("#status-filter"),
@@ -53,6 +117,13 @@ const severityRank = {
   HEALTHY: 1,
   WARNING: 2,
   CRITICAL: 3
+};
+
+
+const incidentStatusRank = {
+  RESOLVED: 1,
+  ACKNOWLEDGED: 2,
+  OPEN: 3
 };
 
 function formatDate(value) {
@@ -506,6 +577,351 @@ function createTableCell(content, className = "") {
   return cell;
 }
 
+function buildIncidentParameters() {
+  const parameters = new URLSearchParams({
+    limit: elements.incidentLimitFilter.value
+  });
+
+  if (elements.incidentStatusFilter.value) {
+    parameters.set(
+      "status",
+      elements.incidentStatusFilter.value
+    );
+  }
+
+  if (elements.incidentSeverityFilter.value) {
+    parameters.set(
+      "severity",
+      elements.incidentSeverityFilter.value
+    );
+  }
+
+  if (elements.incidentSourceFilter.value) {
+    parameters.set(
+      "source_type",
+      elements.incidentSourceFilter.value
+    );
+  }
+
+  if (elements.incidentActiveFilter.value) {
+    parameters.set(
+      "active_only",
+      elements.incidentActiveFilter.value
+    );
+  }
+
+  return parameters;
+}
+
+function createIncidentStatusChip(status) {
+  return createElement(
+    "span",
+    `incident-status incident-status--${status}`,
+    status
+  );
+}
+
+function createSourceBadge(sourceType) {
+  return createElement(
+    "span",
+    "source-badge",
+    sourceType
+  );
+}
+
+function renderIncidentSummary(summary) {
+  state.incidentSummary = summary;
+
+  elements.incidentActiveCount.textContent =
+    String(summary.active);
+  elements.incidentCriticalCount.textContent =
+    String(summary.critical);
+  elements.incidentAcknowledgedCount.textContent =
+    String(summary.acknowledged);
+  elements.incidentResolvedCount.textContent =
+    String(summary.resolved);
+
+  const sources = summary.source_counts;
+
+  elements.sourceSystemCount.textContent =
+    String(sources.SYSTEM || 0);
+  elements.sourceNetworkCount.textContent =
+    String(sources.NETWORK || 0);
+  elements.sourceServiceCount.textContent =
+    String(sources.SERVICE || 0);
+  elements.sourceProcessCount.textContent =
+    String(sources.PROCESS || 0);
+  elements.sourceLogCount.textContent =
+    String(sources.LOG || 0);
+
+  const healthContainer =
+    elements.incidentCenterLabel.parentElement;
+
+  healthContainer.classList.remove(
+    "incident-health--attention",
+    "incident-health--critical"
+  );
+
+  if (summary.critical > 0) {
+    healthContainer.classList.add(
+      "incident-health--critical"
+    );
+
+    elements.incidentCenterLabel.textContent =
+      `${summary.critical} critical incident`
+      + `${summary.critical === 1 ? "" : "s"}`;
+  } else if (summary.active > 0) {
+    healthContainer.classList.add(
+      "incident-health--attention"
+    );
+
+    elements.incidentCenterLabel.textContent =
+      `${summary.active} active incident`
+      + `${summary.active === 1 ? "" : "s"}`;
+  } else {
+    elements.incidentCenterLabel.textContent =
+      "No active incidents";
+  }
+}
+
+function getSortedIncidents() {
+  const incidents = [...state.incidents];
+  const multiplier =
+    state.incidentSortDirection === "asc" ? 1 : -1;
+
+  incidents.sort(
+    (left, right) => {
+      let leftValue =
+        left[state.incidentSortKey];
+      let rightValue =
+        right[state.incidentSortKey];
+
+      if (
+        state.incidentSortKey === "last_seen_at"
+        || state.incidentSortKey === "first_seen_at"
+      ) {
+        leftValue = new Date(leftValue).getTime();
+        rightValue = new Date(rightValue).getTime();
+      }
+
+      if (state.incidentSortKey === "severity") {
+        leftValue = severityRank[leftValue];
+        rightValue = severityRank[rightValue];
+      }
+
+      if (state.incidentSortKey === "status") {
+        leftValue = incidentStatusRank[leftValue];
+        rightValue = incidentStatusRank[rightValue];
+      }
+
+      if (
+        typeof leftValue === "string"
+        && typeof rightValue === "string"
+      ) {
+        return (
+          leftValue.localeCompare(rightValue)
+          * multiplier
+        );
+      }
+
+      return (leftValue - rightValue) * multiplier;
+    }
+  );
+
+  return incidents;
+}
+
+function renderIncidents(incidents) {
+  state.incidents = incidents;
+  elements.incidentTableBody.replaceChildren();
+
+  elements.incidentResultCount.textContent =
+    `${incidents.length} incident`
+    + `${incidents.length === 1 ? "" : "s"}`;
+
+  if (!incidents.length) {
+    elements.incidentTableMessage.hidden = false;
+    elements.incidentTableMessage.textContent =
+      "No incidents match the selected filters.";
+    return;
+  }
+
+  elements.incidentTableMessage.hidden = true;
+
+  for (const incident of getSortedIncidents()) {
+    const row = document.createElement("tr");
+    row.tabIndex = 0;
+    row.dataset.incidentId = incident.incident_id;
+
+    row.append(
+      createTableCell(
+        incident.incident_id,
+        "incident-id"
+      ),
+      createTableCell(
+        formatDate(incident.last_seen_at)
+      ),
+      createTableCell(
+        createSourceBadge(incident.source_type)
+      ),
+      createTableCell(
+        createStatusChip(incident.severity)
+      ),
+      createTableCell(
+        createIncidentStatusChip(incident.status)
+      ),
+      createTableCell(incident.occurrence_count),
+      createTableCell(
+        incident.description,
+        "incident-description"
+      ),
+      createTableCell(
+        createElement(
+          "button",
+          "open-run",
+          "›"
+        )
+      )
+    );
+
+    row.addEventListener(
+      "click",
+      () => openIncidentDrawer(incident)
+    );
+
+    row.addEventListener(
+      "keydown",
+      event => {
+        if (
+          event.key === "Enter"
+          || event.key === " "
+        ) {
+          event.preventDefault();
+          openIncidentDrawer(incident);
+        }
+      }
+    );
+
+    elements.incidentTableBody.appendChild(row);
+  }
+}
+
+function openIncidentDrawer(incident) {
+  elements.drawerTitle.textContent =
+    incident.incident_id;
+  elements.drawerContent.replaceChildren();
+
+  const summarySection = createElement(
+    "section",
+    "detail-section"
+  );
+
+  summarySection.appendChild(
+    createElement("h3", "", "Incident summary")
+  );
+
+  const summaryGrid = createElement(
+    "div",
+    "detail-grid"
+  );
+
+  addDetailItem(
+    summaryGrid,
+    "Source",
+    `${incident.source_type}: ${incident.source_label}`
+  );
+  addDetailItem(
+    summaryGrid,
+    "Source ID",
+    incident.source_id
+  );
+  addDetailItem(
+    summaryGrid,
+    "Severity",
+    incident.severity
+  );
+  addDetailItem(
+    summaryGrid,
+    "Status",
+    incident.status
+  );
+  addDetailItem(
+    summaryGrid,
+    "Occurrences",
+    String(incident.occurrence_count)
+  );
+  addDetailItem(
+    summaryGrid,
+    "Lifecycle",
+    incident.is_active ? "Active" : "Inactive"
+  );
+
+  summarySection.appendChild(summaryGrid);
+
+  const timelineSection = createElement(
+    "section",
+    "detail-section"
+  );
+
+  timelineSection.appendChild(
+    createElement("h3", "", "Timeline")
+  );
+
+  const timelineGrid = createElement(
+    "div",
+    "detail-grid"
+  );
+
+  addDetailItem(
+    timelineGrid,
+    "First seen",
+    formatDate(incident.first_seen_at)
+  );
+  addDetailItem(
+    timelineGrid,
+    "Last seen",
+    formatDate(incident.last_seen_at)
+  );
+
+  if (incident.resolved_at) {
+    addDetailItem(
+      timelineGrid,
+      "Resolved",
+      formatDate(incident.resolved_at)
+    );
+  }
+
+  timelineSection.appendChild(timelineGrid);
+
+  const descriptionSection = createElement(
+    "section",
+    "detail-section"
+  );
+
+  descriptionSection.appendChild(
+    createElement("h3", "", "Description")
+  );
+  descriptionSection.appendChild(
+    createElement(
+      "div",
+      "incident-description-card",
+      incident.description
+    )
+  );
+
+  elements.drawerContent.append(
+    summarySection,
+    timelineSection,
+    descriptionSection
+  );
+
+  elements.drawer.classList.add("drawer--open");
+  elements.drawer.setAttribute(
+    "aria-hidden",
+    "false"
+  );
+}
+
 function renderRuns(runs) {
   state.runs = runs;
   elements.tableBody.replaceChildren();
@@ -700,10 +1116,20 @@ async function loadDashboard(showSuccess = false) {
   elements.refreshButton.disabled = true;
 
   try {
-    const runsParameters = buildRunsParameters(true);
-    const overviewParameters = buildRunsParameters(false);
+    const runsParameters =
+      buildRunsParameters(true);
+    const overviewParameters =
+      buildRunsParameters(false);
+    const incidentParameters =
+      buildIncidentParameters();
 
-    const [health, overview, runs] = await Promise.all([
+    const [
+      health,
+      overview,
+      runs,
+      incidentSummary,
+      incidents
+    ] = await Promise.all([
       fetchJson("/api/v1/health"),
       fetchJson(
         `/api/v1/dashboard/overview?`
@@ -711,12 +1137,19 @@ async function loadDashboard(showSuccess = false) {
       ),
       fetchJson(
         `/api/v1/runs?${runsParameters.toString()}`
+      ),
+      fetchJson("/api/v1/incidents/summary"),
+      fetchJson(
+        `/api/v1/incidents?`
+        + incidentParameters.toString()
       )
     ]);
 
     setConnection(true, health.version);
     renderOverview(overview);
     renderRuns(runs);
+    renderIncidentSummary(incidentSummary);
+    renderIncidents(incidents);
 
     elements.updatedAt.textContent =
       `Updated ${new Date().toLocaleTimeString()}`;
@@ -726,9 +1159,15 @@ async function loadDashboard(showSuccess = false) {
     }
   } catch (error) {
     setConnection(false);
+
     elements.tableMessage.hidden = false;
     elements.tableMessage.textContent =
       `Unable to load reports: ${error.message}`;
+
+    elements.incidentTableMessage.hidden = false;
+    elements.incidentTableMessage.textContent =
+      `Unable to load incidents: ${error.message}`;
+
     showToast(error.message, true);
   } finally {
     elements.refreshButton.disabled = false;
@@ -804,6 +1243,26 @@ elements.clearFilters.addEventListener(
   }
 );
 
+elements.incidentFilters.addEventListener(
+  "submit",
+  event => {
+    event.preventDefault();
+    loadDashboard(false);
+  }
+);
+
+elements.clearIncidentFilters.addEventListener(
+  "click",
+  () => {
+    elements.incidentStatusFilter.value = "";
+    elements.incidentSeverityFilter.value = "";
+    elements.incidentSourceFilter.value = "";
+    elements.incidentActiveFilter.value = "";
+    elements.incidentLimitFilter.value = "25";
+    loadDashboard(false);
+  }
+);
+
 elements.refreshButton.addEventListener(
   "click",
   () => loadDashboard(true)
@@ -867,5 +1326,32 @@ document
       );
     }
   );
+
+document
+  .querySelectorAll("[data-incident-sort]")
+  .forEach(
+    button => {
+      button.addEventListener(
+        "click",
+        () => {
+          const key =
+            button.dataset.incidentSort;
+
+          if (state.incidentSortKey === key) {
+            state.incidentSortDirection =
+              state.incidentSortDirection === "asc"
+                ? "desc"
+                : "asc";
+          } else {
+            state.incidentSortKey = key;
+            state.incidentSortDirection = "asc";
+          }
+
+          renderIncidents(state.incidents);
+        }
+      );
+    }
+  );
+
 
 loadDashboard(false);

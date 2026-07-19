@@ -238,6 +238,220 @@
       </article>
     </section>
 
+<section class="incident-center">
+  <div class="section-heading">
+    <div>
+      <p class="eyebrow">Operational awareness</p>
+      <h2>Incident Center</h2>
+      <p>
+        Review active infrastructure incidents,
+        severity, sources, and lifecycle history.
+      </p>
+    </div>
+
+    <div class="incident-health">
+      <span class="incident-health__dot"></span>
+      <span id="incident-center-label">
+        Loading incident state
+      </span>
+    </div>
+  </div>
+
+  <div class="incident-metrics">
+    <article class="incident-metric incident-metric--active">
+      <span>Active</span>
+      <strong id="incident-active-count">—</strong>
+      <small>Open or acknowledged</small>
+    </article>
+
+    <article class="incident-metric incident-metric--critical">
+      <span>Critical</span>
+      <strong id="incident-critical-count">—</strong>
+      <small>Highest severity</small>
+    </article>
+
+    <article class="incident-metric incident-metric--acknowledged">
+      <span>Acknowledged</span>
+      <strong id="incident-acknowledged-count">—</strongetric incident-metric--critical">
+      <span>Critical</span>
+      <strong id="incident-critical-count">—</strong>
+      <small>Highest severity</small>
+    </article>
+
+    <article class="incident-metric>
+      <small>Under investigation</small>
+    </article>
+
+    <article class="incident-metric incident-metric--resolved">
+      <span>Resolved</span>
+      <strong id="incident-resolved-count">—</strong>
+      <small>Closed incidents</small>
+    </article>
+  </div>
+
+  <div class="incident-sources">
+    <span>Incident sources</span>
+
+    <div class="incident-source-summary">
+      <span>
+        System
+        <strong id="source-system-count">0</strong>
+      </span>
+      <span>
+        Network
+        <strong id="source-network-count">0</strong>
+      </span>
+      <span>
+        Services
+        <strong id="source-service-count">0</strong>
+      </span>
+      <span>
+        Processes
+        <strong id="source-process-count">0</strong>
+      </span>
+      <span>
+        Logs
+        <strong id="source-log-count">0</strong>
+      </span>
+    </div>
+  </div>
+
+  <section class="panel incident-panel">
+    <div class="incident-panel__heading">
+      <div>
+        <p class="eyebrow">Incident lifecycle</p>
+        <h3>Infrastructure incidents</h3>
+      </div>
+
+      <span id="incident-result-count">
+        0 incidents
+      </span>
+    </div>
+
+    <form
+      id="incident-filters"
+      class="incident-filters"
+    >
+      <label>
+        <span>Status</span>
+        <select id="incident-status-filter">
+          <option value="">All statuses</option>
+          <option value="OPEN">Open</option>
+          <option value="ACKNOWLEDGED">
+            Acknowledged
+          </option>
+          <option value="RESOLVED">Resolved</option>
+        </select>
+      </label>
+
+      <label>
+        <span>Severity</span>
+        <select id="incident-severity-filter">
+          <option value="">All severities</option>
+          <option value="WARNING">Warning</option>
+          <option value="CRITICAL">Critical</option>
+        </select>
+      </label>
+
+      <label>
+        <span>Source</span>
+        <select id="incident-source-filter">
+          <option value="">All sources</option>
+          <option value="SYSTEM">System</option>
+          <option value="NETWORK">Network</option>
+          <option value="SERVICE">Service</option>
+          <option value="PROCESS">Process</option>
+          <option value="LOG">Log</option>
+        </select>
+      </label>
+
+      <label>
+        <span>Lifecycle</span>
+        <select id="incident-active-filter">
+          <option value="">All incidents</option>
+          <option value="true">Active only</option>
+          <option value="false">Inactive only</option>
+        </select>
+      </label>
+
+      <label>
+        <span>Rows</span>
+        <select id="incident-limit-filter">
+          <option value="10">10</option>
+          <option value="25" selected>25</option>
+          <option value="50">50</option>
+          <option value="100">100</option>
+        </select>
+      </label>
+
+      <button
+        class="button button--primary"
+        type="submit"
+      >
+        Apply
+      </button>
+
+      <button
+        id="clear-incident-filters"
+        class="button button--ghost"
+        type="button"
+      >
+        Clear
+      </button>
+    </form>
+
+    <div class="table-container">
+      <table class="runs-table incident-table">
+        <thead>
+          <tr>
+            <th>
+              <button data-incident-sort="incident_id">
+                Incident
+              </button>
+            </th>
+            <th>
+              <button data-incident-sort="last_seen_at">
+                Last seen
+              </button>
+            </th>
+            <th>
+              <button data-incident-sort="source_type">
+                Source
+              </button>
+            </th>
+            <th>
+              <button data-incident-sort="severity">
+                Severity
+              </button>
+            </th>
+            <th>
+              <button data-incident-sort="status">
+                Status
+              </button>
+            </th>
+            <th>
+              <button data-incident-sort="occurrence_count">
+                Occurrences
+              </button>
+            </th>
+            <th>Description</th>
+            <th></th>
+          </tr>
+        </thead>
+
+        <tbody id="incident-table-body"></tbody>
+      </table>
+
+      <div
+        id="incident-table-message"
+        class="table-message"
+      >
+        Loading incidents…
+      </div>
+    </div>
+  </section>
+</section>
+
     <section class="panel runs-panel">
       <div class="runs-panel__header">
         <div>
