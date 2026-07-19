@@ -1,0 +1,15 @@
+{
+  "valid_configuration": {
+    "storage": {
+      "database_path": "runtime/custom_history.sqlite3",
+      "busy_timeout_seconds": 10.0
+    },
+    "retention": {
+      "max_runs": 500,
+      "max_age_days": 30,
+      "prune_on_write": false
+    }
+  },
+  "invalid_json_text": "{ invalid-json",
+  "missing_file_name": "missing_run_history.json"
+}

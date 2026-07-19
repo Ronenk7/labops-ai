@@ -1,0 +1,105 @@
+{
+  "valid_storage": {
+    "database_path": "runtime/run_history.sqlite3",
+    "busy_timeout_seconds": 5.0
+  },
+  "valid_retention": {
+    "max_runs": 1000,
+    "max_age_days": 90,
+    "prune_on_write": true
+  },
+  "invalid_database_paths": [
+    {
+      "case_id": "empty-path",
+      "value": ""
+    },
+    {
+      "case_id": "whitespace-path",
+      "value": "   "
+    },
+    {
+      "case_id": "unsupported-json-suffix",
+      "value": "runtime/run_history.json"
+    },
+    {
+      "case_id": "missing-suffix",
+      "value": "runtime/run_history"
+    }
+  ],
+  "invalid_timeouts": [
+    {
+      "case_id": "zero-timeout",
+      "value": 0
+    },
+    {
+      "case_id": "negative-timeout",
+      "value": -1
+    },
+    {
+      "case_id": "string-timeout",
+      "value": "5"
+    },
+    {
+      "case_id": "boolean-timeout",
+      "value": true
+    },
+    {
+      "case_id": "null-timeout",
+      "value": null
+    },
+    {
+      "case_id": "excessive-timeout",
+      "value": 301
+    }
+  ],
+  "invalid_max_runs": [
+    {
+      "case_id": "zero-runs",
+      "value": 0
+    },
+    {
+      "case_id": "negative-runs",
+      "value": -1
+    },
+    {
+      "case_id": "string-runs",
+      "value": "1000"
+    },
+    {
+      "case_id": "boolean-runs",
+      "value": true
+    }
+  ],
+  "invalid_max_age_days": [
+    {
+      "case_id": "zero-days",
+      "value": 0
+    },
+    {
+      "case_id": "negative-days",
+      "value": -1
+    },
+    {
+      "case_id": "string-days",
+      "value": "90"
+    },
+    {
+      "case_id": "boolean-days",
+      "value": true
+    }
+  ],
+  "invalid_prune_flags": [
+    {
+      "case_id": "string-flag",
+      "value": "true"
+    },
+    {
+      "case_id": "integer-flag",
+      "value": 1
+    },
+    {
+      "case_id": "null-flag",
+      "value": null
+    }
+  ]
+}
