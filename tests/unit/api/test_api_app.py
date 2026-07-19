@@ -178,7 +178,7 @@ def test_health_endpoint() -> None:
     assert response.json() == {
         "service": "LabOps AI API",
         "status": "HEALTHY",
-        "version": "0.1.0",
+        "version": "0.2.0",
     }
 
 
@@ -288,8 +288,9 @@ def test_dashboard_is_available() -> None:
     response = client.get("/dashboard")
 
     assert response.status_code == 200
-    assert "LabOps AI Dashboard" in response.text
-    assert "/api/v1/runs" in response.text
+    assert "Operations overview" in response.text
+    assert "/dashboard-assets/dashboard.css" in response.text
+    assert "/dashboard-assets/dashboard.js" in response.text
 
 
 def test_root_redirects_to_dashboard() -> None:

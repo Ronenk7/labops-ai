@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 from labops_ai.health_status import HealthStatus
 from labops_ai.history import RunHistoryEntry
@@ -70,3 +70,53 @@ class RunHistoryResponse(BaseModel):
             bundle_id=entry.bundle_id,
             archive_path=entry.archive_path,
         )
+
+
+class StatusDistributionResponse(BaseModel):
+    """Count recent runs by overall health state."""
+
+    model_config = ConfigDict(frozen=True)
+
+    healthy: int = Field(ge=0)
+    warning: int = Field(ge=0)
+    critical: int = Field(ge=0)
+
+
+class ComponentReliabilityResponse(BaseModel):
+    """Represent recent healthy percentage per component."""
+
+    model_config = ConfigDict(frozen=True)
+
+    system: float = Field(ge=0, le=100)
+    network: float = Field(ge=0, le=100)
+    services: float = Field(ge=0, le=100)
+    processes: float = Field(ge=0, le=100)
+    logs: float = Field(ge=0, le=100)
+
+
+class DashboardTrendPointResponse(BaseModel):
+    """Represent one run in the dashboard trend chart."""
+
+    model_config = ConfigDict(frozen=True)
+
+    run_id: int = Field(ge=1)
+    generated_at: datetime
+    status: HealthStatus
+    active_incidents: int = Field(ge=0)
+
+
+class DashboardOverviewResponse(BaseModel):
+    """Represent calculated dashboard analytics."""
+
+    model_config = ConfigDict(frozen=True)
+
+    generated_at: datetime
+    sample_size: int = Field(ge=0)
+    health_score: float = Field(ge=0, le=100)
+    active_incident_total: int = Field(ge=0)
+    current_healthy_streak: int = Field(ge=0)
+    hosts: list[str]
+    latest_run: RunHistoryResponse | None
+    status_distribution: StatusDistributionResponse
+    component_reliability: ComponentReliabilityResponse
+    trend: list[DashboardTrendPointResponse]

@@ -1,7 +1,8 @@
-"""Create the read-only LabOps AI FastAPI application."""
+"""Create the LabOps AI monitoring and reporting API."""
 from __future__ import annotations
 
-from pathlib import Path
+from datetime import datetime, timezone
+from pathlib import Path as FilePath
 from typing import Annotated
 
 from fastapi import (
@@ -11,15 +12,25 @@ from fastapi import (
     Query,
     status as http_status,
 )
-from fastapi.responses import FileResponse, RedirectResponse
+from fastapi.responses import (
+    FileResponse,
+    RedirectResponse,
+    Response,
+)
+from fastapi.staticfiles import StaticFiles
 
+from labops_ai.api.analytics import (
+    DashboardAnalyticsService,
+)
+from labops_ai.api.reporting import (
+    RunHistoryCsvReportBuilder,
+)
 from labops_ai.api.schemas import (
     ApiHealthResponse,
+    DashboardOverviewResponse,
     RunHistoryResponse,
 )
-from labops_ai.api.service import (
-    RunHistoryApiService,
-)
+from labops_ai.api.service import RunHistoryApiService
 from labops_ai.health_status import HealthStatus
 from labops_ai.history import (
     RunHistoryConfigLoader,
@@ -29,8 +40,14 @@ from labops_ai.history import (
 )
 
 
-API_VERSION = "0.1.0"
-DASHBOARD_PATH = Path(__file__).with_name("dashboard.html")
+API_VERSION = "0.2.0"
+DASHBOARD_DIRECTORY = FilePath(__file__).with_name(
+    "dashboard"
+)
+DASHBOARD_FILE = DASHBOARD_DIRECTORY / "index.html"
+DASHBOARD_STATIC_DIRECTORY = (
+    DASHBOARD_DIRECTORY / "static"
+)
 
 
 def build_default_history_service(
@@ -80,31 +97,40 @@ def _history_unavailable(
 def create_app(
     history_service: RunHistoryApiService | None = None,
 ) -> FastAPI:
-    """Create an API with injectable history access."""
+    """Create the API with injectable history access."""
     service = (
         history_service
         if history_service is not None
         else build_default_history_service()
     )
 
-    if not isinstance(
-        service,
-        RunHistoryApiService,
-    ):
+    if not isinstance(service, RunHistoryApiService):
         raise TypeError(
             "history_service must be a "
             "RunHistoryApiService."
         )
 
+    analytics = DashboardAnalyticsService(
+        reader=service.reader
+    )
+
     application = FastAPI(
         title="LabOps AI API",
         description=(
-            "Read-only monitoring, incident, "
-            "and diagnostic history API."
+            "Monitoring analytics, diagnostics, "
+            "history, and reporting API."
         ),
         version=API_VERSION,
         docs_url="/docs",
         redoc_url="/redoc",
+    )
+
+    application.mount(
+        "/dashboard-assets",
+        StaticFiles(
+            directory=DASHBOARD_STATIC_DIRECTORY
+        ),
+        name="dashboard-assets",
     )
 
     @application.get(
@@ -112,10 +138,12 @@ def create_app(
         include_in_schema=False,
     )
     def redirect_to_dashboard() -> RedirectResponse:
-        """Redirect the application root to the dashboard."""
+        """Redirect the root path to the dashboard."""
         return RedirectResponse(
             url="/dashboard",
-            status_code=http_status.HTTP_307_TEMPORARY_REDIRECT,
+            status_code=(
+                http_status.HTTP_307_TEMPORARY_REDIRECT
+            ),
         )
 
     @application.get(
@@ -123,9 +151,9 @@ def create_app(
         include_in_schema=False,
     )
     def get_dashboard() -> FileResponse:
-        """Return the LabOps AI monitoring dashboard."""
+        """Return the interactive monitoring dashboard."""
         return FileResponse(
-            DASHBOARD_PATH,
+            DASHBOARD_FILE,
             media_type="text/html",
         )
 
@@ -143,6 +171,34 @@ def create_app(
         )
 
     @application.get(
+        "/api/v1/dashboard/overview",
+        response_model=DashboardOverviewResponse,
+        tags=["dashboard"],
+    )
+    def get_dashboard_overview(
+        limit: Annotated[
+            int,
+            Query(ge=1, le=200),
+        ] = 100,
+        host_name: Annotated[
+            str | None,
+            Query(min_length=1, max_length=255),
+        ] = None,
+    ) -> DashboardOverviewResponse:
+        """Return calculated monitoring analytics."""
+        normalized_host = _normalize_host_name(
+            host_name
+        )
+
+        try:
+            return analytics.build_overview(
+                limit=limit,
+                host_name=normalized_host,
+            )
+        except RunHistoryQueryError as error:
+            raise _history_unavailable(error) from error
+
+    @application.get(
         "/api/v1/runs/latest",
         response_model=RunHistoryResponse,
         tags=["runs"],
@@ -150,10 +206,7 @@ def create_app(
     def get_latest_run(
         host_name: Annotated[
             str | None,
-            Query(
-                min_length=1,
-                max_length=255,
-            ),
+            Query(min_length=1, max_length=255),
         ] = None,
     ) -> RunHistoryResponse:
         """Return the newest stored monitoring run."""
@@ -170,9 +223,7 @@ def create_app(
 
         if result is None:
             raise HTTPException(
-                status_code=(
-                    http_status.HTTP_404_NOT_FOUND
-                ),
+                status_code=http_status.HTTP_404_NOT_FOUND,
                 detail="No monitoring run was found.",
             )
 
@@ -194,10 +245,7 @@ def create_app(
         ] = None,
         host_name: Annotated[
             str | None,
-            Query(
-                min_length=1,
-                max_length=255,
-            ),
+            Query(min_length=1, max_length=255),
         ] = None,
     ) -> list[RunHistoryResponse]:
         """Return recent runs with optional filters."""
@@ -213,6 +261,56 @@ def create_app(
             )
         except RunHistoryQueryError as error:
             raise _history_unavailable(error) from error
+
+    @application.get(
+        "/api/v1/runs/export.csv",
+        tags=["reports"],
+    )
+    def export_runs_csv(
+        limit: Annotated[
+            int,
+            Query(ge=1, le=1000),
+        ] = 100,
+        health_status: Annotated[
+            HealthStatus | None,
+            Query(alias="status"),
+        ] = None,
+        host_name: Annotated[
+            str | None,
+            Query(min_length=1, max_length=255),
+        ] = None,
+    ) -> Response:
+        """Download filtered run history as CSV."""
+        normalized_host = _normalize_host_name(
+            host_name
+        )
+
+        try:
+            entries = service.list_recent(
+                limit=limit,
+                status=health_status,
+                host_name=normalized_host,
+            )
+        except RunHistoryQueryError as error:
+            raise _history_unavailable(error) from error
+
+        report = RunHistoryCsvReportBuilder.build(
+            entries
+        )
+        date_stamp = datetime.now(
+            timezone.utc
+        ).strftime("%Y%m%dT%H%M%SZ")
+
+        return Response(
+            content=report,
+            media_type="text/csv; charset=utf-8",
+            headers={
+                "Content-Disposition": (
+                    "attachment; filename="
+                    f'"labops-ai-runs-{date_stamp}.csv"'
+                )
+            },
+        )
 
     @application.get(
         "/api/v1/runs/{run_id}",
@@ -233,9 +331,7 @@ def create_app(
 
         if result is None:
             raise HTTPException(
-                status_code=(
-                    http_status.HTTP_404_NOT_FOUND
-                ),
+                status_code=http_status.HTTP_404_NOT_FOUND,
                 detail=(
                     f"Monitoring run {run_id} "
                     "was not found."

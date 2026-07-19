@@ -2,37 +2,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Protocol
 
-from labops_ai.health_status import HealthStatus
-from labops_ai.history import RunHistoryEntry
+from labops_ai.api.contracts import RunHistoryReader
 from labops_ai.api.schemas import RunHistoryResponse
-
-
-class RunHistoryReader(Protocol):
-    """Define history operations required by the API."""
-
-    def get_by_id(
-        self,
-        run_id: int,
-    ) -> RunHistoryEntry | None:
-        """Return one run by identifier."""
-
-    def get_latest(
-        self,
-        *,
-        host_name: str | None = None,
-    ) -> RunHistoryEntry | None:
-        """Return the newest matching run."""
-
-    def list_recent(
-        self,
-        *,
-        limit: int = 20,
-        status: HealthStatus | None = None,
-        host_name: str | None = None,
-    ) -> tuple[RunHistoryEntry, ...]:
-        """Return recent matching runs."""
+from labops_ai.health_status import HealthStatus
 
 
 @dataclass(frozen=True, slots=True)
