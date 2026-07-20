@@ -18,6 +18,10 @@ from labops_ai.agent.http_sender import (
 from labops_ai.agent.loader import (
     HostAgentConfigLoader,
 )
+from labops_ai.agent.providers import (
+    LocalHostProviders,
+    resolve_primary_address,
+)
 
 
 __all__ = [
@@ -31,4 +35,6 @@ __all__ = [
     "HostAgentScheduleConfig",
     "HostAgentServerConfig",
     "HttpHeartbeatSender",
+    "LocalHostProviders",
+    "resolve_primary_address",
 ]
