@@ -17,6 +17,10 @@ from labops_ai.hosts.registry_config import (
 from labops_ai.hosts.registry_loader import (
     HostRegistryConfigLoader,
 )
+from labops_ai.hosts.service import (
+    HostRegistryService,
+    HostStatusSnapshot,
+)
 from labops_ai.hosts.status import (
     HostAvailabilityPolicy,
     HostStatusEvaluator,
@@ -31,7 +35,9 @@ __all__ = [
     "HostRegistryConfigLoader",
     "HostRegistryError",
     "HostRegistrySchemaError",
+    "HostRegistryService",
     "HostRegistryStorageConfig",
     "HostStatusEvaluator",
+    "HostStatusSnapshot",
     "SqliteHostRegistry",
 ]
