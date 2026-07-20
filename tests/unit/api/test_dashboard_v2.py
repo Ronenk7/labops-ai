@@ -196,6 +196,8 @@ def test_professional_dashboard_assets() -> None:
     assert "renderRunDetails" in script.text
     assert pro_stylesheet.status_code == 200
     assert "Run Story" in pro_stylesheet.text
+    assert "live-chart-tooltip" in pro_stylesheet.text
     assert pro_script.status_code == 200
     assert "run-story__hero" in pro_script.text
     assert "proUpdateLiveComparison" in pro_script.text
+    assert "showLiveChartTooltip" in pro_script.text

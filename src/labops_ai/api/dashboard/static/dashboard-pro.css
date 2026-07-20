@@ -919,3 +919,58 @@
     transition: none !important;
   }
 }
+/* Live chart precision tooltips */
+
+.live-sparkline,
+.live-network-sparkline {
+  cursor: crosshair;
+}
+
+.live-chart-tooltip {
+  position: fixed;
+  z-index: 1000;
+  min-width: 155px;
+  padding: 11px 13px;
+  border: 1px solid rgba(244, 164, 93, 0.30);
+  border-radius: 11px;
+  color: white;
+  pointer-events: none;
+  background:
+    linear-gradient(
+      145deg,
+      #171513,
+      #2b2521
+    );
+  box-shadow:
+    0 14px 34px rgba(24, 17, 12, 0.34);
+}
+
+.live-chart-tooltip[hidden] {
+  display: none;
+}
+
+.live-chart-tooltip__label,
+.live-chart-tooltip__value,
+.live-chart-tooltip__time {
+  display: block;
+}
+
+.live-chart-tooltip__label {
+  color: #b9aea5;
+  font-size: 9px;
+  font-weight: 820;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.live-chart-tooltip__value {
+  margin: 5px 0 3px;
+  color: #ffad61;
+  font-size: 19px;
+  letter-spacing: -0.025em;
+}
+
+.live-chart-tooltip__time {
+  color: #d7cec6;
+  font-size: 10px;
+}

@@ -1242,3 +1242,190 @@ renderLiveMetrics = function renderProfessionalLiveMetrics(
 
   proUpdateLiveComparison(metrics);
 };
+/* Live chart precision tooltips */
+
+const proTooltipState = {
+  sampledAt: []
+};
+
+
+function ensureLiveChartTooltip() {
+  let tooltip = document.querySelector(
+    "#live-chart-tooltip"
+  );
+
+  if (!tooltip) {
+    tooltip = proElement(
+      "div",
+      "live-chart-tooltip"
+    );
+    tooltip.id = "live-chart-tooltip";
+    tooltip.hidden = true;
+    tooltip.setAttribute("role", "tooltip");
+
+    document.body.appendChild(tooltip);
+  }
+
+  return tooltip;
+}
+
+
+function showLiveChartTooltip(
+  event,
+  label,
+  value,
+  sampledAt
+) {
+  const tooltip = ensureLiveChartTooltip();
+
+  tooltip.replaceChildren(
+    proElement(
+      "span",
+      "live-chart-tooltip__label",
+      label
+    ),
+    proElement(
+      "strong",
+      "live-chart-tooltip__value",
+      value
+    ),
+    proElement(
+      "small",
+      "live-chart-tooltip__time",
+      new Date(sampledAt).toLocaleTimeString()
+    )
+  );
+
+  tooltip.hidden = false;
+
+  const margin = 14;
+  let left = event.clientX + margin;
+  let top = event.clientY - 90;
+
+  left = Math.min(
+    left,
+    window.innerWidth
+      - tooltip.offsetWidth
+      - margin
+  );
+
+  top = Math.max(margin, top);
+
+  tooltip.style.left = `${left}px`;
+  tooltip.style.top = `${top}px`;
+}
+
+
+function hideLiveChartTooltip() {
+  const tooltip = document.querySelector(
+    "#live-chart-tooltip"
+  );
+
+  if (tooltip) {
+    tooltip.hidden = true;
+  }
+}
+
+
+const proTooltipCharts = {
+  "live-cpu-sparkline": {
+    label: "CPU activity",
+    format: value => `${Number(value).toFixed(1)}%`
+  },
+  "live-memory-sparkline": {
+    label: "Memory pressure",
+    format: value => `${Number(value).toFixed(1)}%`
+  },
+  "live-disk-sparkline": {
+    label: "Disk occupancy",
+    format: value => `${Number(value).toFixed(1)}%`
+  },
+  "live-network-sparkline": {
+    label: "Aggregate network throughput",
+    format: value => formatTransferRate(value)
+  }
+};
+
+
+const proTooltipBaseSparkline =
+  renderLiveSparkline;
+
+
+renderLiveSparkline =
+function renderSparklineWithTooltip(
+  element,
+  values
+) {
+  proTooltipBaseSparkline(element, values);
+
+  const configuration =
+    proTooltipCharts[element.id];
+
+  if (!configuration || values.length < 2) {
+    return;
+  }
+
+  element.addEventListener(
+    "mousemove",
+    event => {
+      const bounds =
+        element.getBoundingClientRect();
+
+      const relativePosition = Math.min(
+        1,
+        Math.max(
+          0,
+          (event.clientX - bounds.left)
+          / bounds.width
+        )
+      );
+
+      const index = Math.round(
+        relativePosition * (values.length - 1)
+      );
+
+      const sampledAt =
+        proTooltipState.sampledAt[index]
+        || new Date().toISOString();
+
+      showLiveChartTooltip(
+        event,
+        configuration.label,
+        configuration.format(values[index]),
+        sampledAt
+      );
+    }
+  );
+
+  element.addEventListener(
+    "mouseleave",
+    hideLiveChartTooltip
+  );
+};
+
+
+const proTooltipBaseLiveMetrics =
+  renderLiveMetrics;
+
+
+renderLiveMetrics =
+function renderLiveMetricsWithTooltips(metrics) {
+  proTooltipState.sampledAt.push(
+    metrics.sampled_at
+  );
+
+  if (proTooltipState.sampledAt.length > 32) {
+    proTooltipState.sampledAt.shift();
+  }
+
+  proTooltipBaseLiveMetrics(metrics);
+};
+
+
+window.addEventListener(
+  "scroll",
+  hideLiveChartTooltip,
+  {
+    passive: true
+  }
+);
