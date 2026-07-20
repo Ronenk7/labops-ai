@@ -22,9 +22,17 @@ from labops_ai.agent.providers import (
     LocalHostProviders,
     resolve_primary_address,
 )
+from labops_ai.agent.runner import (
+    AgentConfigLoaderProtocol,
+    build_default_agent,
+    resolve_agent_version,
+    run_agent_once,
+    utc_now,
+)
 
 
 __all__ = [
+    "AgentConfigLoaderProtocol",
     "HeartbeatDeliveryError",
     "HeartbeatSender",
     "HostAgent",
@@ -36,5 +44,9 @@ __all__ = [
     "HostAgentServerConfig",
     "HttpHeartbeatSender",
     "LocalHostProviders",
+    "build_default_agent",
+    "resolve_agent_version",
     "resolve_primary_address",
+    "run_agent_once",
+    "utc_now",
 ]
