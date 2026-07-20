@@ -1,0 +1,10 @@
+{
+  "storage": {
+    "database_path": "runtime/hosts/host_registry.sqlite3",
+    "busy_timeout_seconds": 5.0
+  },
+  "availability": {
+    "stale_after_seconds": 30,
+    "offline_after_seconds": 120
+  }
+}

@@ -70,3 +70,4 @@ def load_json_config(config_path: str | Path) -> dict[str, Any]:
         )
 
     return configuration
+HOST_REGISTRY_CONFIG_PATH = CONFIG_DIRECTORY / "host_registry.json"
