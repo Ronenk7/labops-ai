@@ -25,6 +25,9 @@ from labops_ai.api.analytics import (
 from labops_ai.api.incident_service import (
     IncidentApiService,
 )
+from labops_ai.api.host_routes import (
+    build_host_router,
+)
 from labops_ai.api.live_routes import (
     build_live_router,
 )
@@ -46,6 +49,7 @@ from labops_ai.api.schemas import (
 )
 from labops_ai.api.service import RunHistoryApiService
 from labops_ai.health_status import HealthStatus
+from labops_ai.hosts import HostRegistryService
 from labops_ai.diagnostics import (
     DiagnosticBundleConfigLoader,
 )
@@ -145,6 +149,7 @@ def create_app(
     history_service: RunHistoryApiService | None = None,
     incident_service: IncidentApiService | None = None,
     run_details_service: RunDetailsApiService | None = None,
+    host_service: HostRegistryService | None = None,
 ) -> FastAPI:
     """Create the API with injectable history access."""
     service = (
@@ -560,6 +565,10 @@ def create_app(
             )
 
         return result
+
+    application.include_router(
+        build_host_router(host_service)
+    )
 
     return application
 

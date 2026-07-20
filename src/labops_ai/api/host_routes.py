@@ -1,9 +1,12 @@
 """FastAPI routes for the central host registry."""
 from __future__ import annotations
 
+from typing import Annotated
+
 from fastapi import (
     APIRouter,
     HTTPException,
+    Path,
     status,
 )
 
@@ -37,6 +40,21 @@ def build_default_host_service() -> HostRegistryService:
     return HostRegistryService(
         registry=registry,
         evaluator=evaluator,
+    )
+
+
+def _registry_unavailable(
+    error: HostRegistryError,
+) -> HTTPException:
+    """Convert registry failures into HTTP 503."""
+    return HTTPException(
+        status_code=(
+            status.HTTP_503_SERVICE_UNAVAILABLE
+        ),
+        detail=(
+            "Host registry is temporarily "
+            "unavailable."
+        ),
     )
 
 
@@ -77,20 +95,64 @@ def build_host_router(
                 request.to_domain()
             )
         except HostRegistryError as error:
-            raise HTTPException(
-                status_code=(
-                    status.HTTP_503_SERVICE_UNAVAILABLE
-                ),
-                detail=(
-                    "Host registry is temporarily "
-                    "unavailable."
-                ),
-            ) from error
+            raise _registry_unavailable(error) from error
         except ValueError as error:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail=str(error),
             ) from error
+
+        return HostResponse.from_snapshot(snapshot)
+
+    @router.get(
+        "",
+        response_model=list[HostResponse],
+    )
+    def list_hosts() -> list[HostResponse]:
+        """Return all registered hosts with availability."""
+        try:
+            snapshots = resolved_service.list_all()
+        except HostRegistryError as error:
+            raise _registry_unavailable(error) from error
+        except ValueError as error:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=str(error),
+            ) from error
+
+        return [
+            HostResponse.from_snapshot(snapshot)
+            for snapshot in snapshots
+        ]
+
+    @router.get(
+        "/{host_id}",
+        response_model=HostResponse,
+    )
+    def get_host(
+        host_id: Annotated[
+            str,
+            Path(min_length=1, max_length=128),
+        ],
+    ) -> HostResponse:
+        """Return one registered host by identifier."""
+        try:
+            snapshot = resolved_service.get_by_id(
+                host_id
+            )
+        except HostRegistryError as error:
+            raise _registry_unavailable(error) from error
+        except ValueError as error:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=str(error),
+            ) from error
+
+        if snapshot is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Host {host_id} was not found.",
+            )
 
         return HostResponse.from_snapshot(snapshot)
 

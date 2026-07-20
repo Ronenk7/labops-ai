@@ -273,3 +273,132 @@ def test_rejects_invalid_service_dependency() -> None:
         match="HostRegistryService",
     ):
         build_host_router(object())
+
+
+
+class FailingReadHostRegistry(InMemoryHostRegistry):
+    """Simulate host-registry read failures."""
+
+    def get_by_id(
+        self,
+        host_id: str,
+    ) -> HostRecord | None:
+        """Fail while reading one host."""
+        raise HostRegistryError(
+            "Simulated registry read failure."
+        )
+
+    def list_all(self) -> tuple[HostRecord, ...]:
+        """Fail while listing hosts."""
+        raise HostRegistryError(
+            "Simulated registry read failure."
+        )
+
+
+def build_registered_host(
+    *,
+    host_id: str,
+    host_name: str,
+    observed_at: datetime,
+) -> HostRecord:
+    """Create one registered host for read tests."""
+    return HostRecord.register(
+        HostHeartbeat(
+            host_id=host_id,
+            host_name=host_name,
+            address=f"10.0.0.{host_id[-1]}",
+            operating_system="Ubuntu 24.04",
+            architecture="x86_64",
+            agent_version="0.1.0",
+            observed_at=observed_at,
+        )
+    )
+
+
+def test_lists_hosts_with_calculated_availability() -> None:
+    """Return all hosts with status calculated at read time."""
+    online_host = build_registered_host(
+        host_id="host-001",
+        host_name="online-node",
+        observed_at=BASE_TIME,
+    )
+    offline_host = build_registered_host(
+        host_id="host-002",
+        host_name="offline-node",
+        observed_at=(
+            BASE_TIME - timedelta(seconds=120)
+        ),
+    )
+
+    response = build_client(
+        InMemoryHostRegistry(
+            (online_host, offline_host)
+        )
+    ).get("/api/v1/hosts")
+
+    assert response.status_code == 200
+
+    hosts = {
+        item["host_id"]: item
+        for item in response.json()
+    }
+
+    assert hosts["host-001"]["availability"] == "ONLINE"
+    assert hosts["host-002"]["availability"] == "OFFLINE"
+    assert (
+        hosts["host-002"]["heartbeat_age_seconds"]
+        == 120
+    )
+
+
+def test_gets_host_by_id() -> None:
+    """Return one registered host."""
+    host = build_registered_host(
+        host_id="host-001",
+        host_name="lab-node-01",
+        observed_at=BASE_TIME,
+    )
+
+    response = build_client(
+        InMemoryHostRegistry((host,))
+    ).get("/api/v1/hosts/host-001")
+
+    assert response.status_code == 200
+    assert response.json()["host_id"] == "host-001"
+    assert response.json()["availability"] == "ONLINE"
+
+
+def test_returns_404_for_unknown_host() -> None:
+    """Return HTTP 404 when the host does not exist."""
+    response = build_client(
+        InMemoryHostRegistry()
+    ).get("/api/v1/hosts/missing-host")
+
+    assert response.status_code == 404
+    assert response.json() == {
+        "detail": "Host missing-host was not found."
+    }
+
+
+def test_returns_503_when_host_list_fails() -> None:
+    """Convert host-list storage failures to HTTP 503."""
+    response = build_client(
+        FailingReadHostRegistry()
+    ).get("/api/v1/hosts")
+
+    assert response.status_code == 503
+    assert response.json() == {
+        "detail": (
+            "Host registry is temporarily "
+            "unavailable."
+        )
+    }
+
+
+def test_returns_503_when_host_read_fails() -> None:
+    """Convert single-host storage failures to HTTP 503."""
+    response = build_client(
+        FailingReadHostRegistry()
+    ).get("/api/v1/hosts/host-001")
+
+    assert response.status_code == 503
