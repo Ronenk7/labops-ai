@@ -172,6 +172,12 @@ def test_professional_dashboard_assets() -> None:
     script = client.get(
         "/dashboard-assets/dashboard.js"
     )
+    pro_stylesheet = client.get(
+        "/dashboard-assets/dashboard-pro.css"
+    )
+    pro_script = client.get(
+        "/dashboard-assets/dashboard-pro.js"
+    )
 
     assert dashboard.status_code == 200
     assert "Operations overview" in dashboard.text
@@ -188,3 +194,8 @@ def test_professional_dashboard_assets() -> None:
     assert "/api/v1/hosts/suggestions" in script.text
     assert "/details" in script.text
     assert "renderRunDetails" in script.text
+    assert pro_stylesheet.status_code == 200
+    assert "Run Story" in pro_stylesheet.text
+    assert pro_script.status_code == 200
+    assert "run-story__hero" in pro_script.text
+    assert "proUpdateLiveComparison" in pro_script.text

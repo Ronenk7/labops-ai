@@ -20,7 +20,7 @@ const state = {
     memory: [],
     disk: [],
     network: []
-  }
+  },
   hostSuggestionTimer: null,
   hostSuggestionRequest: 0
 };
