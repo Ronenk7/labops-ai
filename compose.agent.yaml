@@ -1,0 +1,21 @@
+name: labops-ai-agent-lab
+
+services:
+  lab-node-02:
+    build:
+      context: .
+      dockerfile: deploy/agent/Dockerfile
+    image: labops-ai-agent:local
+    container_name: labops-ai-lab-node-02
+    hostname: lab-node-02
+    init: true
+    restart: unless-stopped
+    stop_signal: SIGTERM
+    stop_grace_period: 20s
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=16m
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
