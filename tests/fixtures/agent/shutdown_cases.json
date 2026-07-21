@@ -1,0 +1,46 @@
+{
+  "signal_cases": [
+    {
+      "id": "interrupt",
+      "signal_name": "SIGINT",
+      "expected_reason": "INTERRUPT"
+    },
+    {
+      "id": "terminate",
+      "signal_name": "SIGTERM",
+      "expected_reason": "TERMINATE"
+    }
+  ],
+  "invalid_wait_values": [
+    {
+      "id": "boolean",
+      "value": true,
+      "error_type": "TypeError",
+      "match": "seconds must be numeric"
+    },
+    {
+      "id": "string",
+      "value": "1",
+      "error_type": "TypeError",
+      "match": "seconds must be numeric"
+    },
+    {
+      "id": "negative",
+      "value": -1,
+      "error_type": "ValueError",
+      "match": "finite and non-negative"
+    },
+    {
+      "id": "nan",
+      "value": "nan",
+      "error_type": "ValueError",
+      "match": "finite and non-negative"
+    },
+    {
+      "id": "infinity",
+      "value": "inf",
+      "error_type": "ValueError",
+      "match": "finite and non-negative"
+    }
+  ]
+}

@@ -9,6 +9,10 @@
     "observed_at": "2026-07-20T18:00:00+00:00"
   },
   "expected_success_output": "Heartbeat sent successfully: host_id=host-001, address=10.0.0.10, observed_at=2026-07-20T18:00:00+00:00\n",
+  "expected_continuous_start_output": "Host agent started in continuous mode. Press Ctrl+C to stop.\n",
+  "expected_continuous_return_output": "Host agent started in continuous mode. Press Ctrl+C to stop.\nHost agent stopped.\n",
+  "expected_interrupt_output": "Host agent started in continuous mode. Press Ctrl+C to stop.\nHost agent stopped by user.\n",
+  "expected_terminate_output": "Host agent started in continuous mode. Press Ctrl+C to stop.\nHost agent stopped after termination signal.\n",
   "runtime_failures": [
     {
       "id": "os-error",
@@ -31,9 +35,13 @@
       "message": "invalid configuration value"
     }
   ],
+  "continuous_failure": {
+    "message": "continuous heartbeat failed"
+  },
   "help_tokens": [
     "usage: labops-agent",
     "--once",
+    "--continuous",
     "--config"
   ]
 }

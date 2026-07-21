@@ -32,6 +32,10 @@ from labops_ai.agent.runner import (
 from labops_ai.agent.scheduler import (
     run_agent_forever,
 )
+from labops_ai.agent.shutdown import (
+    ShutdownReason,
+    SignalShutdownController,
+)
 
 
 __all__ = [
@@ -47,6 +51,8 @@ __all__ = [
     "HostAgentServerConfig",
     "HttpHeartbeatSender",
     "LocalHostProviders",
+    "ShutdownReason",
+    "SignalShutdownController",
     "build_default_agent",
     "resolve_agent_version",
     "resolve_primary_address",
