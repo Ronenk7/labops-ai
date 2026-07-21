@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1">
+  <meta name="description"
+        content="LabOps AI monitoring run details">
+  <title>LabOps AI — Run Details</title>
+  <link rel="stylesheet"
+        href="/dashboard-assets/dashboard.css">
+  <link rel="stylesheet"
+        href="/dashboard-assets/dashboard-hosts-page.css?v=1.0.0">
+  <link rel="stylesheet"
+        href="/dashboard-assets/dashboard-run-detail.css?v=1.0.0">
+  <script src="/dashboard-assets/dashboard-run-detail.js?v=1.0.0"
+          defer></script>
+</head>
+<body class="run-detail-page">
+  <header class="fleet-topbar">
+    <div class="fleet-topbar__inner">
+      <a class="fleet-brand" href="/dashboard">
+        <span class="fleet-brand__mark">L</span>
+        <span>
+          <strong>LabOps AI</strong>
+          <small>Infrastructure Intelligence</small>
+        </span>
+      </a>
+      <nav class="fleet-navigation"
+           aria-label="Dashboard navigation">
+        <a href="/dashboard">Overview</a>
+        <a href="/dashboard/hosts">Host Fleet</a>
+      </nav>
+      <div class="fleet-topbar__actions">
+        <div id="run-api-state" class="fleet-api-state">
+          <span class="fleet-api-state__dot"></span>
+          <span id="run-api-label">Connecting</span>
+        </div>
+        <button id="run-refresh"
+                class="fleet-button fleet-button--light"
+                type="button">
+          <span class="fleet-button__icon">↻</span>
+          Refresh
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="run-detail-main">
+    <section class="run-detail-hero">
+      <div class="run-detail-hero__glow"></div>
+      <a class="run-detail-back"
+         href="/dashboard/hosts">
+        ← Back to Host Fleet
+      </a>
+
+      <div class="run-detail-hero__content">
+        <div>
+          <p class="fleet-eyebrow">Monitoring evidence</p>
+          <div class="run-detail-title-row">
+            <div>
+              <h1 id="run-title">Loading run…</h1>
+              <code id="run-bundle-id">Waiting for API</code>
+            </div>
+            <span id="run-overall-status"
+                  class="run-status-pill run-status-pill--unknown">
+              UNKNOWN
+            </span>
+          </div>
+          <p class="run-detail-description">
+            Human-readable monitoring data collected by the
+            LabOps AI Agent and stored in the central archive.
+          </p>
+        </div>
+
+        <div class="run-detail-actions">
+<a id="run-download-zip"
+             class="fleet-button fleet-button--light"
+             href="#"
+             download>
+            Download ZIP
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <div id="run-message"
+         class="run-detail-message"
+         role="status"
+         aria-live="polite">
+      Loading monitoring evidence…
+    </div>
+
+    <div id="run-content" hidden>
+      <section class="run-summary-grid"
+               aria-label="Monitoring run summary">
+        <article class="run-summary-card">
+          <span>Host</span>
+          <strong id="run-host-name">—</strong>
+          <small>Reporting Agent</small>
+        </article>
+        <article class="run-summary-card">
+          <span>Generated</span>
+          <strong id="run-generated-at"
+                  class="run-summary-card__date">—</strong>
+          <small>Diagnostic timestamp</small>
+        </article>
+        <article class="run-summary-card">
+          <span>Active incidents</span>
+          <strong id="run-active-incidents">0</strong>
+          <small>Unresolved findings</small>
+        </article>
+        <article class="run-summary-card">
+          <span>Resolved incidents</span>
+          <strong id="run-resolved-incidents">0</strong>
+          <small>Recovered findings</small>
+        </article>
+      </section>
+
+      <section class="run-panel">
+        <header class="run-panel__header">
+          <p class="fleet-eyebrow">System health</p>
+          <h2>Resource utilization</h2>
+        </header>
+        <div id="run-system-metrics"
+             class="run-metric-grid"></div>
+      </section>
+
+      <section class="run-panel">
+        <header class="run-panel__header">
+          <p class="fleet-eyebrow">Connectivity</p>
+          <h2>Network checks</h2>
+        </header>
+        <div id="run-network-content"></div>
+      </section>
+
+      <section class="run-panel">
+        <header class="run-panel__header">
+          <p class="fleet-eyebrow">Service control</p>
+          <h2>System services</h2>
+        </header>
+        <div id="run-services-content"></div>
+      </section>
+
+      <section class="run-panel">
+        <header class="run-panel__header">
+          <p class="fleet-eyebrow">Runtime visibility</p>
+          <h2>Processes</h2>
+        </header>
+        <div id="run-processes-content"></div>
+      </section>
+
+      <section class="run-panel">
+        <header class="run-panel__header">
+          <p class="fleet-eyebrow">Log analysis</p>
+          <h2>Log sources</h2>
+        </header>
+        <div id="run-logs-content"></div>
+      </section>
+
+      <section class="run-panel">
+        <header class="run-panel__header">
+          <p class="fleet-eyebrow">Incident lifecycle</p>
+          <h2>Incident evidence</h2>
+        </header>
+        <div id="run-incidents-content"></div>
+      </section>
+    </div>
+  </main>
+</body>
+</html>

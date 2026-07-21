@@ -628,9 +628,26 @@
       )
     );
 
+    const fullViewLink = createElement(
+      "a",
+      "fleet-button fleet-button--light",
+      "Open full Host view →"
+    );
+
+    fullViewLink.href = (
+      `/dashboard/hosts/${encodeURIComponent(
+        host.host_id
+      )}`
+    );
+    fullViewLink.setAttribute(
+      "aria-label",
+      `Open full Host view for ${host.host_name}`
+    );
+
     elements.drawerContent.append(
       hero,
-      details
+      details,
+      fullViewLink
     );
   }
 
