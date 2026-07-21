@@ -6,6 +6,7 @@ ARG APP_UID=10001
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 ENV PIP_DISABLE_PIP_VERSION_CHECK=1
+ENV LABOPS_AI_PROJECT_ROOT=/opt/labops-ai
 
 WORKDIR /opt/labops-ai
 
@@ -21,10 +22,17 @@ RUN groupadd \
 
 COPY pyproject.toml README.md ./
 COPY src ./src
+COPY config ./config
+COPY logs ./logs
 
 RUN python -m pip install \
       --no-cache-dir \
-      .
+      . \
+    && mkdir -p \
+      /opt/labops-ai/runtime \
+    && chown -R \
+      "${APP_USER}:${APP_USER}" \
+      /opt/labops-ai/runtime
 
 COPY \
   config/host_agent_container.json \

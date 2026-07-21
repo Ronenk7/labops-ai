@@ -8,6 +8,8 @@ services:
     image: labops-ai-agent:local
     container_name: labops-ai-lab-node-02
     hostname: lab-node-02
+    environment:
+      LABOPS_AI_MONITORING_PROFILE: container
     init: true
     restart: unless-stopped
     stop_signal: SIGTERM
@@ -15,7 +17,12 @@ services:
     read_only: true
     tmpfs:
       - /tmp:rw,noexec,nosuid,size=16m
+    volumes:
+      - lab-node-02-runtime:/opt/labops-ai/runtime
     cap_drop:
       - ALL
     security_opt:
       - no-new-privileges:true
+
+volumes:
+  lab-node-02-runtime:

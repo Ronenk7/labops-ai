@@ -49,6 +49,10 @@ class ServiceMonitorConfigLoader:
         )
 
         return ServiceMonitorConfig(
+            enabled=configuration.get(
+                "enabled",
+                True,
+            ),
             command=SystemctlCommandConfig(
                 executable=command_values["executable"],
                 timeout_seconds=command_values["timeout_seconds"],
@@ -81,8 +85,25 @@ class ServiceMonitorConfigLoader:
         configuration: dict[str, Any],
     ) -> None:
         """Validate required JSON sections and exact keys."""
+        enabled = configuration.get(
+            "enabled",
+            True,
+        )
+
+        if not isinstance(enabled, bool):
+            raise ValueError(
+                "Service monitor enabled setting "
+                "must be a boolean."
+            )
+
+        required_configuration = {
+            key: value
+            for key, value in configuration.items()
+            if key != "enabled"
+        }
+
         cls._validate_exact_keys(
-            configuration,
+            required_configuration,
             {"command", "services", "report"},
             "configuration",
         )

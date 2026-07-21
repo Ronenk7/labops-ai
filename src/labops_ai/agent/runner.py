@@ -13,6 +13,8 @@ from labops_ai.agent.agent import (
     Clock,
     HeartbeatSender,
     HostAgent,
+    MonitoringExecutor,
+    MonitoringRunSender,
     Sleeper,
 )
 from labops_ai.agent.config import (
@@ -21,6 +23,9 @@ from labops_ai.agent.config import (
 from labops_ai.agent.http_sender import (
     HttpHeartbeatSender,
 )
+from labops_ai.agent.run_sender import (
+    HttpMonitoringRunSender,
+)
 from labops_ai.agent.loader import (
     HostAgentConfigLoader,
 )
@@ -28,6 +33,9 @@ from labops_ai.agent.providers import (
     LocalHostProviders,
 )
 from labops_ai.hosts import HostHeartbeat
+from labops_ai.monitoring import (
+    run_remote_monitoring_snapshot,
+)
 
 
 _DISTRIBUTION_NAME = "labops-ai"
@@ -74,6 +82,8 @@ def build_default_agent(
     ) = None,
     providers: LocalHostProviders | None = None,
     sender: HeartbeatSender | None = None,
+    monitoring_sender: MonitoringRunSender | None = None,
+    monitoring_executor: MonitoringExecutor | None = None,
     clock: Clock = utc_now,
     sleeper: Sleeper = time.sleep,
     agent_version: str | None = None,
@@ -129,6 +139,17 @@ def build_default_agent(
         else HttpHeartbeatSender()
     )
 
+    resolved_monitoring_sender = (
+        monitoring_sender
+        if monitoring_sender is not None
+        else HttpMonitoringRunSender()
+    )
+    resolved_monitoring_executor = (
+        monitoring_executor
+        if monitoring_executor is not None
+        else run_remote_monitoring_snapshot
+    )
+
     resolved_version = (
         resolve_agent_version()
         if agent_version is None
@@ -153,6 +174,12 @@ def build_default_agent(
         ),
         agent_version=resolved_version,
         sleeper=sleeper,
+        monitoring_executor=(
+            resolved_monitoring_executor
+        ),
+        monitoring_sender=(
+            resolved_monitoring_sender
+        ),
     )
 
 

@@ -122,6 +122,7 @@ class HostAgentServerConfig:
     base_url: str
     heartbeat_path: str
     request_timeout_seconds: float
+    run_ingestion_path: str = "/api/v1/runs/ingest"
 
     def __post_init__(self) -> None:
         """Validate server settings."""
@@ -154,6 +155,19 @@ class HostAgentServerConfig:
                 "heartbeat_path must start with '/'."
             )
 
+        run_ingestion_path = (
+            _normalize_required_text(
+                self.run_ingestion_path,
+                "run_ingestion_path",
+            )
+        )
+
+        if not run_ingestion_path.startswith("/"):
+            raise ValueError(
+                "run_ingestion_path must start "
+                "with '/'."
+            )
+
         object.__setattr__(
             self,
             "base_url",
@@ -163,6 +177,11 @@ class HostAgentServerConfig:
             self,
             "heartbeat_path",
             heartbeat_path,
+        )
+        object.__setattr__(
+            self,
+            "run_ingestion_path",
+            run_ingestion_path,
         )
         object.__setattr__(
             self,
@@ -183,11 +202,21 @@ class HostAgentServerConfig:
         )
 
 
+    @property
+    def run_ingestion_url(self) -> str:
+        """Return the complete run-ingestion URL."""
+        return (
+            f"{self.base_url}/"
+            f"{self.run_ingestion_path.lstrip('/')}"
+        )
+
+
 @dataclass(frozen=True, slots=True)
 class HostAgentScheduleConfig:
     """Represent heartbeat scheduling settings."""
 
     interval_seconds: float
+    monitoring_interval_seconds: float = 60.0
 
     def __post_init__(self) -> None:
         """Validate scheduling settings."""
@@ -197,6 +226,15 @@ class HostAgentScheduleConfig:
             _normalize_number(
                 self.interval_seconds,
                 "interval_seconds",
+                maximum=_MAX_INTERVAL_SECONDS,
+            ),
+        )
+        object.__setattr__(
+            self,
+            "monitoring_interval_seconds",
+            _normalize_number(
+                self.monitoring_interval_seconds,
+                "monitoring_interval_seconds",
                 maximum=_MAX_INTERVAL_SECONDS,
             ),
         )

@@ -47,6 +47,7 @@ class ProcessMonitorConfigLoader:
                 process_name=process["process_name"],
                 label=process["label"],
                 required=process["required"],
+                enabled=process.get("enabled", True),
                 cpu_thresholds_percent=ProcessCpuThresholds(
                     warning=process[
                         "cpu_thresholds_percent"
@@ -150,8 +151,25 @@ class ProcessMonitorConfigLoader:
                     f"Process entry {index} must be a JSON object."
                 )
 
+            enabled = process.get(
+                "enabled",
+                True,
+            )
+
+            if not isinstance(enabled, bool):
+                raise ValueError(
+                    f"Process entry {index} enabled "
+                    "setting must be a boolean."
+                )
+
+            required_process = {
+                key: value
+                for key, value in process.items()
+                if key != "enabled"
+            }
+
             cls._validate_exact_keys(
-                process,
+                required_process,
                 {
                     "process_name",
                     "label",

@@ -1,9 +1,12 @@
-"""Public components for the remote host agent."""
+"""Public components for the remote Host Agent."""
 
 from labops_ai.agent.agent import (
     HeartbeatDeliveryError,
     HeartbeatSender,
     HostAgent,
+    MonitoringExecutor,
+    MonitoringRunDeliveryError,
+    MonitoringRunSender,
 )
 from labops_ai.agent.config import (
     HostAgentConfig,
@@ -21,6 +24,9 @@ from labops_ai.agent.loader import (
 from labops_ai.agent.providers import (
     LocalHostProviders,
     resolve_primary_address,
+)
+from labops_ai.agent.run_sender import (
+    HttpMonitoringRunSender,
 )
 from labops_ai.agent.runner import (
     AgentConfigLoaderProtocol,
@@ -50,7 +56,11 @@ __all__ = [
     "HostAgentScheduleConfig",
     "HostAgentServerConfig",
     "HttpHeartbeatSender",
+    "HttpMonitoringRunSender",
     "LocalHostProviders",
+    "MonitoringExecutor",
+    "MonitoringRunDeliveryError",
+    "MonitoringRunSender",
     "ShutdownReason",
     "SignalShutdownController",
     "build_default_agent",

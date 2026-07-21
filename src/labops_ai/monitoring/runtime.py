@@ -1,4 +1,5 @@
 """Reusable complete monitoring runtime for local and remote Agents."""
+from pathlib import Path
 from labops_ai.config import (
     SystemHealthConfig,
     SystemHealthConfigLoader,
@@ -8,6 +9,7 @@ from labops_ai.diagnostics import (
     DiagnosticBundlePipeline,
     DiagnosticBundlePipelineResult,
     DiagnosticBundleWriter,
+    DiagnosticSnapshot,
     DiagnosticSnapshotBuilder,
 )
 from labops_ai.health_status import HealthStatus
@@ -339,8 +341,9 @@ def save_run_history(
     return entry
 
 
-def run_complete_monitoring() -> RunHistoryEntry:
-    """Run and persist one complete monitoring cycle."""
+def run_complete_diagnostics(
+) -> DiagnosticBundlePipelineResult:
+    """Run monitoring and create one diagnostic bundle."""
     (
         system_config,
         system_metrics,
@@ -374,7 +377,7 @@ def run_complete_monitoring() -> RunHistoryEntry:
     )
 
     print()
-    diagnostic_result = run_diagnostic_bundle(
+    return run_diagnostic_bundle(
         system_config=system_config,
         system_metrics=system_metrics,
         system_statuses=system_statuses,
@@ -385,5 +388,32 @@ def run_complete_monitoring() -> RunHistoryEntry:
         incident_state=incident_summary.state,
     )
 
+
+def run_remote_monitoring_snapshot(
+) -> DiagnosticSnapshot:
+    """Collect one remote snapshot without local history."""
+    result = run_complete_diagnostics()
+    archive_path = Path(
+        result.bundle.archive_path
+    )
+
+    try:
+        archive_path.unlink(
+            missing_ok=True
+        )
+    except OSError:
+        pass
+
+    return result.snapshot
+
+
+def run_complete_monitoring() -> RunHistoryEntry:
+    """Run and persist one complete monitoring cycle."""
+    diagnostic_result = (
+        run_complete_diagnostics()
+    )
+
     print()
-    return save_run_history(diagnostic_result)
+    return save_run_history(
+        diagnostic_result
+    )

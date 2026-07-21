@@ -1,6 +1,7 @@
-"""Tests for the reusable complete monitoring runtime."""
+"""Tests for the reusable monitoring runtime."""
 from __future__ import annotations
 
+from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
@@ -11,10 +12,10 @@ from labops_ai.monitoring import runtime
 pytestmark = pytest.mark.unit
 
 
-def test_runs_complete_pipeline_in_order(
+def test_runs_complete_diagnostics_in_order(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Execute every monitoring stage exactly once."""
+    """Execute every diagnostic stage once."""
     events: list[str] = []
 
     system_config = object()
@@ -26,118 +27,93 @@ def test_runs_complete_pipeline_in_order(
     log_summary = object()
     incident_state = object()
     diagnostic_result = object()
-    history_entry = object()
-
-    def run_system_health():
-        events.append("system")
-        return (
-            system_config,
-            system_metrics,
-            system_statuses,
-        )
-
-    def run_network_health():
-        events.append("network")
-        return network_summary
-
-    def run_service_health():
-        events.append("services")
-        return service_summary
-
-    def run_recovery_actions(summary):
-        assert summary is service_summary
-        events.append("recovery")
-        return object()
-
-    def run_process_health():
-        events.append("processes")
-        return process_summary
-
-    def run_log_analysis():
-        events.append("logs")
-        return log_summary
-
-    def run_incident_management(**arguments):
-        assert arguments == {
-            "system_config": system_config,
-            "system_metrics": system_metrics,
-            "system_statuses": system_statuses,
-            "network_summary": network_summary,
-            "service_summary": service_summary,
-            "process_summary": process_summary,
-            "log_summary": log_summary,
-        }
-        events.append("incidents")
-        return SimpleNamespace(state=incident_state)
-
-    def run_diagnostic_bundle(**arguments):
-        assert arguments == {
-            "system_config": system_config,
-            "system_metrics": system_metrics,
-            "system_statuses": system_statuses,
-            "network_summary": network_summary,
-            "service_summary": service_summary,
-            "process_summary": process_summary,
-            "log_summary": log_summary,
-            "incident_state": incident_state,
-        }
-        events.append("diagnostics")
-        return diagnostic_result
-
-    def save_run_history(result):
-        assert result is diagnostic_result
-        events.append("history")
-        return history_entry
 
     monkeypatch.setattr(
         runtime,
         "run_system_health",
-        run_system_health,
+        lambda: (
+            events.append("system")
+            or (
+                system_config,
+                system_metrics,
+                system_statuses,
+            )
+        ),
     )
     monkeypatch.setattr(
         runtime,
         "run_network_health",
-        run_network_health,
+        lambda: (
+            events.append("network")
+            or network_summary
+        ),
     )
     monkeypatch.setattr(
         runtime,
         "run_service_health",
-        run_service_health,
+        lambda: (
+            events.append("services")
+            or service_summary
+        ),
     )
+
+    def recovery(summary):
+        assert summary is service_summary
+        events.append("recovery")
+
     monkeypatch.setattr(
         runtime,
         "run_recovery_actions",
-        run_recovery_actions,
+        recovery,
     )
     monkeypatch.setattr(
         runtime,
         "run_process_health",
-        run_process_health,
+        lambda: (
+            events.append("processes")
+            or process_summary
+        ),
     )
     monkeypatch.setattr(
         runtime,
         "run_log_analysis",
-        run_log_analysis,
+        lambda: (
+            events.append("logs")
+            or log_summary
+        ),
     )
+
+    def incidents(**arguments):
+        assert arguments["system_config"] is (
+            system_config
+        )
+        events.append("incidents")
+        return SimpleNamespace(
+            state=incident_state
+        )
+
     monkeypatch.setattr(
         runtime,
         "run_incident_management",
-        run_incident_management,
+        incidents,
     )
+
+    def diagnostics(**arguments):
+        assert arguments["incident_state"] is (
+            incident_state
+        )
+        events.append("diagnostics")
+        return diagnostic_result
+
     monkeypatch.setattr(
         runtime,
         "run_diagnostic_bundle",
-        run_diagnostic_bundle,
-    )
-    monkeypatch.setattr(
-        runtime,
-        "save_run_history",
-        save_run_history,
+        diagnostics,
     )
 
-    result = runtime.run_complete_monitoring()
+    result = runtime.run_complete_diagnostics()
 
-    assert result is history_entry
+    assert result is diagnostic_result
     assert events == [
         "system",
         "network",
@@ -147,8 +123,66 @@ def test_runs_complete_pipeline_in_order(
         "logs",
         "incidents",
         "diagnostics",
-        "history",
     ]
+
+
+def test_remote_runtime_removes_local_bundle(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    """Return the snapshot without local history."""
+    archive_path = (
+        tmp_path / "remote-run.zip"
+    )
+    archive_path.write_bytes(b"temporary")
+
+    snapshot = object()
+    result = SimpleNamespace(
+        snapshot=snapshot,
+        bundle=SimpleNamespace(
+            archive_path=archive_path
+        ),
+    )
+
+    monkeypatch.setattr(
+        runtime,
+        "run_complete_diagnostics",
+        lambda: result,
+    )
+
+    returned = (
+        runtime.run_remote_monitoring_snapshot()
+    )
+
+    assert returned is snapshot
+    assert not archive_path.exists()
+
+
+def test_complete_monitoring_saves_history(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Persist diagnostics for local execution."""
+    diagnostic_result = object()
+    history_entry = object()
+
+    monkeypatch.setattr(
+        runtime,
+        "run_complete_diagnostics",
+        lambda: diagnostic_result,
+    )
+    monkeypatch.setattr(
+        runtime,
+        "save_run_history",
+        lambda result: (
+            history_entry
+            if result is diagnostic_result
+            else None
+        ),
+    )
+
+    result = runtime.run_complete_monitoring()
+
+    assert result is history_entry
 
 
 def test_command_entry_point_delegates(

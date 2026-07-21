@@ -15,6 +15,7 @@ class ServiceCheckStatus(StrEnum):
     NOT_FOUND = "NOT_FOUND"
     UNKNOWN = "UNKNOWN"
     CHECK_ERROR = "CHECK_ERROR"
+    NOT_APPLICABLE = "NOT_APPLICABLE"
 
 
 class ServiceFailureReason(StrEnum):
@@ -88,6 +89,30 @@ class ServiceCheckResult:
             self.active_state,
             self.sub_state,
         )
+
+        if (
+            self.status
+            is ServiceCheckStatus.NOT_APPLICABLE
+        ):
+            if any(
+                state is not None
+                for state in raw_states
+            ):
+                raise ValueError(
+                    "A not-applicable service cannot "
+                    "contain raw states."
+                )
+
+            if (
+                self.failure_reason is not None
+                or self.error_message is not None
+            ):
+                raise ValueError(
+                    "A not-applicable service cannot "
+                    "contain failure details."
+                )
+
+            return
 
         if self.status is ServiceCheckStatus.CHECK_ERROR:
             if any(state is not None for state in raw_states):

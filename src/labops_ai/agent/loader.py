@@ -35,7 +35,7 @@ class HostAgentConfigLoader:
         return self._config_path
 
     def load(self) -> HostAgentConfig:
-        """Load the complete agent configuration."""
+        """Load the complete Agent configuration."""
         configuration = load_json_config(
             self._config_path
         )
@@ -63,7 +63,7 @@ class HostAgentConfigLoader:
         cls,
         configuration: dict[str, Any],
     ) -> None:
-        """Validate exact sections and keys."""
+        """Validate required and optional settings."""
         cls._validate_exact_keys(
             configuration,
             {
@@ -75,7 +75,7 @@ class HostAgentConfigLoader:
             "configuration",
         )
 
-        expected_sections = {
+        required_sections = {
             "identity": {
                 "host_id_override",
             },
@@ -94,18 +94,31 @@ class HostAgentConfigLoader:
             },
         }
 
+        optional_sections = {
+            "server": {
+                "run_ingestion_path",
+            },
+            "schedule": {
+                "monitoring_interval_seconds",
+            },
+        }
+
         for (
             section_name,
-            expected_keys,
-        ) in expected_sections.items():
+            required_keys,
+        ) in required_sections.items():
             section = cls._require_object(
                 configuration,
                 section_name,
             )
-            cls._validate_exact_keys(
+            cls._validate_section_keys(
                 section,
-                expected_keys,
-                f"{section_name} section",
+                required_keys=required_keys,
+                optional_keys=optional_sections.get(
+                    section_name,
+                    set(),
+                ),
+                location=f"{section_name} section",
             )
 
     @staticmethod
@@ -124,6 +137,41 @@ class HostAgentConfigLoader:
             )
 
         return section
+
+    @staticmethod
+    def _validate_section_keys(
+        configuration: dict[str, Any],
+        *,
+        required_keys: set[str],
+        optional_keys: set[str],
+        location: str,
+    ) -> None:
+        """Validate required keys and reject unknown keys."""
+        actual_keys = set(configuration)
+        missing = required_keys - actual_keys
+        unexpected = (
+            actual_keys
+            - required_keys
+            - optional_keys
+        )
+
+        if missing:
+            formatted = ", ".join(
+                sorted(missing)
+            )
+            raise ValueError(
+                "Missing required keys in host agent "
+                f"{location}: {formatted}."
+            )
+
+        if unexpected:
+            formatted = ", ".join(
+                sorted(unexpected)
+            )
+            raise ValueError(
+                "Unsupported keys in host agent "
+                f"{location}: {formatted}."
+            )
 
     @staticmethod
     def _validate_exact_keys(

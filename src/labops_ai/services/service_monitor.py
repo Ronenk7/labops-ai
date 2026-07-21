@@ -95,6 +95,32 @@ class ServiceMonitor:
         """Check every configured service."""
         records: list[ServiceHealthRecord] = []
 
+        if not self.config.enabled:
+            records_tuple = tuple(
+                ServiceHealthRecord(
+                    result=ServiceCheckResult(
+                        service_name=(
+                            target.service_name
+                        ),
+                        label=target.label,
+                        status=(
+                            ServiceCheckStatus
+                            .NOT_APPLICABLE
+                        ),
+                    ),
+                    health_status=(
+                        HealthStatus.HEALTHY
+                    ),
+                )
+                for target in self.config.services
+            )
+
+            return ServiceMonitoringSummary(
+                records=records_tuple,
+                overall_status=HealthStatus.HEALTHY,
+            )
+
+
         for target in self.config.services:
             result = self.checker.check(target)
 
@@ -134,7 +160,10 @@ class ServiceMonitor:
                 "result must be a ServiceCheckResult instance."
             )
 
-        if result.status is ServiceCheckStatus.ACTIVE:
+        if result.status in {
+            ServiceCheckStatus.ACTIVE,
+            ServiceCheckStatus.NOT_APPLICABLE,
+        }:
             return HealthStatus.HEALTHY
 
         if result.status is ServiceCheckStatus.TRANSITIONING:

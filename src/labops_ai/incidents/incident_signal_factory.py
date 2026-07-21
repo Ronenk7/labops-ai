@@ -31,6 +31,9 @@ from labops_ai.processes.process_result import ProcessCheckStatus
 from labops_ai.services.service_monitor import (
     ServiceMonitoringSummary,
 )
+from labops_ai.services.service_result import (
+    ServiceCheckStatus,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -132,6 +135,14 @@ class IncidentSignalFactory:
             result = record.result
 
             if (
+                result.status
+                is ServiceCheckStatus.NOT_APPLICABLE
+            ):
+                description = (
+                    f"{result.label} is not applicable "
+                    "to this monitoring profile."
+                )
+            elif (
                 result.failure_reason is not None
                 or result.error_message is not None
             ):
@@ -189,7 +200,15 @@ class IncidentSignalFactory:
         for record in summary.records:
             result = record.result
 
-            if result.status is ProcessCheckStatus.RUNNING:
+            if (
+                result.status
+                is ProcessCheckStatus.NOT_APPLICABLE
+            ):
+                description = (
+                    f"{result.label} is not applicable "
+                    "to this monitoring profile."
+                )
+            elif result.status is ProcessCheckStatus.RUNNING:
                 description = (
                     self.config.process_running_description_template.format(
                         label=result.label,

@@ -146,6 +146,7 @@ class ProcessTargetConfig:
     required: bool
     cpu_thresholds_percent: ProcessCpuThresholds
     memory_thresholds_mb: ProcessMemoryThresholds
+    enabled: bool = True
 
     def __post_init__(self) -> None:
         """Validate and normalize the process target."""
@@ -157,6 +158,11 @@ class ProcessTargetConfig:
             "Process label",
             self.label,
         )
+
+        if not isinstance(self.enabled, bool):
+            raise TypeError(
+                "enabled must be a boolean."
+            )
 
         if not isinstance(self.required, bool):
             raise TypeError("required must be a boolean.")

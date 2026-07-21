@@ -1,0 +1,58 @@
+{
+  "collection": {
+    "cpu_sample_interval_seconds": 0.05
+  },
+  "processes": [
+    {
+      "process_name": "systemd",
+      "label": "System Manager",
+      "required": true,
+      "enabled": false,
+      "cpu_thresholds_percent": {
+        "warning": 70.0,
+        "critical": 90.0
+      },
+      "memory_thresholds_mb": {
+        "warning": 500.0,
+        "critical": 1000.0
+      }
+    },
+    {
+      "process_name": "python",
+      "label": "Python Runtime",
+      "required": true,
+      "enabled": true,
+      "cpu_thresholds_percent": {
+        "warning": 70.0,
+        "critical": 90.0
+      },
+      "memory_thresholds_mb": {
+        "warning": 1000.0,
+        "critical": 2000.0
+      }
+    }
+  ],
+  "report": {
+    "title": "LabOps AI - Process Health",
+    "separator": "---------------------------",
+    "overall_label": "Overall status",
+    "process_label": "Process",
+    "name_label": "Name",
+    "required_label": "Required",
+    "check_status_label": "Check status",
+    "health_label": "Health",
+    "instances_label": "Instances",
+    "pids_label": "PIDs",
+    "cpu_label": "Total CPU",
+    "memory_label": "Total memory",
+    "runtime_label": "Longest runtime",
+    "failure_reason_label": "Failure reason",
+    "error_message_label": "Error",
+    "yes_value": "Yes",
+    "no_value": "No",
+    "cpu_unit": "%",
+    "memory_unit": "MB",
+    "runtime_unit": "seconds",
+    "decimal_places": 2
+  }
+}
