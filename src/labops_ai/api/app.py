@@ -73,6 +73,9 @@ DASHBOARD_DIRECTORY = FilePath(__file__).with_name(
     "dashboard"
 )
 DASHBOARD_FILE = DASHBOARD_DIRECTORY / "index.html"
+HOSTS_DASHBOARD_FILE = (
+    DASHBOARD_DIRECTORY / "hosts.html"
+)
 DASHBOARD_STATIC_DIRECTORY = (
     DASHBOARD_DIRECTORY / "static"
 )
@@ -249,6 +252,17 @@ def create_app(
         """Return the interactive monitoring dashboard."""
         return FileResponse(
             DASHBOARD_FILE,
+            media_type="text/html",
+        )
+
+    @application.get(
+        "/dashboard/hosts",
+        include_in_schema=False,
+    )
+    def get_hosts_dashboard() -> FileResponse:
+        """Return the multi-host fleet dashboard."""
+        return FileResponse(
+            HOSTS_DASHBOARD_FILE,
             media_type="text/html",
         )
 

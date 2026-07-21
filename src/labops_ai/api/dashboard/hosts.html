@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1"
+  >
+  <meta
+    name="description"
+    content="LabOps AI multi-host fleet command center"
+  >
+
+  <title>LabOps AI — Host Fleet</title>
+
+  <link
+    rel="stylesheet"
+    href="/dashboard-assets/dashboard.css"
+  >
+  <link
+    rel="stylesheet"
+    href="/dashboard-assets/dashboard-hosts-page.css?v=1.0.0"
+  >
+
+  <script
+    src="/dashboard-assets/dashboard-hosts-page.js?v=1.0.0"
+    defer
+  ></script>
+</head>
+
+<body class="fleet-page">
+  <header class="fleet-topbar">
+    <div class="fleet-topbar__inner">
+      <a class="fleet-brand" href="/dashboard">
+        <span class="fleet-brand__mark">L</span>
+
+        <span>
+          <strong>LabOps AI</strong>
+          <small>Infrastructure Intelligence</small>
+        </span>
+      </a>
+
+      <nav
+        class="fleet-navigation"
+        aria-label="Dashboard navigation"
+      >
+        <a href="/dashboard">Overview</a>
+        <a
+          class="fleet-navigation__active"
+          href="/dashboard/hosts"
+          aria-current="page"
+        >
+          Host Fleet
+        </a>
+      </nav>
+
+      <div class="fleet-topbar__actions">
+        <div
+          id="fleet-api-state"
+          class="fleet-api-state"
+        >
+          <span
+            id="fleet-api-dot"
+            class="fleet-api-state__dot"
+          ></span>
+          <span id="fleet-api-label">
+            Connecting
+          </span>
+        </div>
+
+        <button
+          id="fleet-refresh"
+          class="fleet-button fleet-button--light"
+          type="button"
+        >
+          <span class="fleet-button__icon">↻</span>
+          Refresh
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="fleet-main">
+    <section class="fleet-hero">
+      <div class="fleet-hero__glow"></div>
+
+      <div class="fleet-hero__content">
+        <div>
+          <p class="fleet-eyebrow">
+            Multi-host operations
+          </p>
+
+          <h1>Fleet command center</h1>
+
+          <p class="fleet-hero__description">
+            Central visibility into every Linux host
+            reporting through the LabOps AI Agent.
+            Detect stale and offline systems before
+            they become operational incidents.
+          </p>
+        </div>
+
+        <div class="fleet-freshness">
+          <span>Automatic refresh</span>
+          <strong id="fleet-countdown">15s</strong>
+          <small id="fleet-updated">
+            Waiting for Host Registry
+          </small>
+        </div>
+      </div>
+
+      <div class="fleet-summary">
+        <article
+          class="fleet-summary-card fleet-summary-card--total"
+        >
+          <div class="fleet-summary-card__icon">◉</div>
+          <div>
+            <span>Registered hosts</span>
+            <strong id="fleet-total">0</strong>
+            <small>Known Agent identities</small>
+          </div>
+        </article>
+
+        <article
+          class="fleet-summary-card fleet-summary-card--online"
+        >
+          <div class="fleet-summary-card__icon">✓</div>
+          <div>
+            <span>Online</span>
+            <strong id="fleet-online">0</strong>
+            <small>Reporting normally</small>
+          </div>
+        </article>
+
+        <article
+          class="fleet-summary-card fleet-summary-card--stale"
+        >
+          <div class="fleet-summary-card__icon">!</div>
+          <div>
+            <span>Stale</span>
+            <strong id="fleet-stale">0</strong>
+            <small>Heartbeat delayed</small>
+          </div>
+        </article>
+
+        <article
+          class="fleet-summary-card fleet-summary-card--offline"
+        >
+          <div class="fleet-summary-card__icon">×</div>
+          <div>
+            <span>Offline</span>
+            <strong id="fleet-offline">0</strong>
+            <small>Heartbeat missing</small>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section
+      class="fleet-workspace"
+      aria-labelledby="fleet-hosts-title"
+    >
+      <header class="fleet-workspace__header">
+        <div>
+          <p class="fleet-eyebrow">Agent inventory</p>
+          <h2 id="fleet-hosts-title">
+            Monitored infrastructure
+          </h2>
+          <p id="fleet-result-count">
+            Loading registered Hosts…
+          </p>
+        </div>
+
+        <div class="fleet-controls">
+          <label class="fleet-search">
+            <span>Search</span>
+            <input
+              id="fleet-search"
+              type="search"
+              placeholder="Host name, ID, address…"
+              autocomplete="off"
+            >
+          </label>
+
+          <label class="fleet-select">
+            <span>Availability</span>
+            <select id="fleet-status-filter">
+              <option value="">All states</option>
+              <option value="ONLINE">Online</option>
+              <option value="STALE">Stale</option>
+              <option value="OFFLINE">Offline</option>
+            </select>
+          </label>
+
+          <label class="fleet-select">
+            <span>Sort by</span>
+            <select id="fleet-sort">
+              <option value="risk">Operational risk</option>
+              <option value="name">Host name</option>
+              <option value="newest">
+                Most recent heartbeat
+              </option>
+              <option value="oldest">
+                Oldest heartbeat
+              </option>
+            </select>
+          </label>
+        </div>
+      </header>
+
+      <div
+        id="fleet-message"
+        class="fleet-message"
+        role="status"
+      >
+        Connecting to the Host Registry…
+      </div>
+
+      <div
+        id="fleet-host-grid"
+        class="fleet-host-grid"
+        aria-live="polite"
+      ></div>
+    </section>
+  </main>
+
+  <aside
+    id="host-drawer"
+    class="host-drawer"
+    aria-hidden="true"
+    aria-labelledby="host-drawer-title"
+  >
+    <button
+      id="host-drawer-backdrop"
+      class="host-drawer__backdrop"
+      type="button"
+      aria-label="Close Host details"
+    ></button>
+
+    <div class="host-drawer__panel">
+      <header class="host-drawer__header">
+        <div>
+          <p class="fleet-eyebrow">
+            Host intelligence
+          </p>
+          <h2 id="host-drawer-title">
+            Host details
+          </h2>
+        </div>
+
+        <button
+          id="host-drawer-close"
+          class="host-drawer__close"
+          type="button"
+          aria-label="Close Host details"
+        >
+          ×
+        </button>
+      </header>
+
+      <div
+        id="host-drawer-content"
+        class="host-drawer__content"
+      ></div>
+    </div>
+  </aside>
+
+  <div
+    id="fleet-toast"
+    class="fleet-toast"
+    role="status"
+    aria-live="polite"
+  ></div>
+</body>
+</html>
