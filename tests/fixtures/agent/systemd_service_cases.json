@@ -1,0 +1,40 @@
+{
+  "service_name": "labops-ai-agent.service",
+  "static_unit_tokens": [
+    "[Unit]",
+    "Description=LabOps AI remote host heartbeat agent",
+    "Wants=network-online.target",
+    "After=network-online.target",
+    "StartLimitIntervalSec=60",
+    "StartLimitBurst=5",
+    "[Service]",
+    "Type=simple",
+    "Environment=PYTHONUNBUFFERED=1",
+    "Environment=PYTHONDONTWRITEBYTECODE=1",
+    "Restart=on-failure",
+    "RestartSec=5s",
+    "TimeoutStartSec=20s",
+    "TimeoutStopSec=20s",
+    "KillSignal=SIGTERM",
+    "NoNewPrivileges=true",
+    "PrivateTmp=true",
+    "UMask=0077",
+    "[Install]",
+    "WantedBy=default.target"
+  ],
+  "exec_arguments": "-m labops_ai.agent --continuous --config",
+  "management_script_tokens": [
+    "systemd-analyze",
+    "verify",
+    "systemctl --user is-active",
+    "require_api_available",
+    "read_last_seen",
+    "wait_for_fresh_heartbeat",
+    "last_seen_at"
+  ],
+  "invalid_action": {
+    "value": "unsupported",
+    "expected_exit_code": 1,
+    "expected_error": "Usage:"
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "host_name": "lab-node-02",
+  "container_name": "labops-ai-lab-node-02",
+  "image_name": "labops-ai-agent:local",
+  "dockerfile_tokens": [
+    "FROM python:3.12-slim-bookworm",
+    "WORKDIR /opt/labops-ai",
+    "USER labops",
+    "\"python\"",
+    "\"-m\"",
+    "\"labops_ai.agent\"",
+    "\"--continuous\"",
+    "\"/etc/labops-ai/host_agent.json\""
+  ],
+  "compose_tokens": [
+    "name: labops-ai-agent-lab",
+    "lab-node-02:",
+    "container_name: labops-ai-lab-node-02",
+    "hostname: lab-node-02",
+    "restart: unless-stopped",
+    "stop_signal: SIGTERM",
+    "stop_grace_period: 20s",
+    "read_only: true",
+    "no-new-privileges:true"
+  ],
+  "config": {
+    "base_url": "http://host.docker.internal:8000",
+    "heartbeat_path": "/api/v1/hosts/heartbeat",
+    "interval_seconds": 15.0
+  }
+}

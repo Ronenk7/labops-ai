@@ -1,0 +1,100 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-07-21T09:00:00+00:00",
+  "host_name": "lab-node-02",
+  "overall_status": "HEALTHY",
+  "summary": {
+    "active_incidents": 0,
+    "resolved_incidents": 0,
+    "system_status": "HEALTHY",
+    "network_status": "HEALTHY",
+    "service_status": "HEALTHY",
+    "process_status": "HEALTHY",
+    "log_status": "HEALTHY"
+  },
+  "system": {
+    "overall_status": "HEALTHY",
+    "metrics": [
+      {
+        "metric_name": "cpu_percent",
+        "label": "CPU usage",
+        "value_percent": 12.5,
+        "health_status": "HEALTHY"
+      }
+    ]
+  },
+  "network": {
+    "overall_status": "HEALTHY",
+    "checks": [
+      {
+        "check_type": "DNS",
+        "target": "example.com",
+        "check_status": "PASSED",
+        "health_status": "HEALTHY",
+        "latency_ms": 4.2,
+        "resolved_address": "93.184.216.34",
+        "failure_reason": null,
+        "error_message": null
+      }
+    ]
+  },
+  "services": {
+    "overall_status": "HEALTHY",
+    "records": [
+      {
+        "service_name": "cron.service",
+        "label": "Cron service",
+        "check_status": "ACTIVE",
+        "health_status": "HEALTHY",
+        "load_state": "loaded",
+        "active_state": "active",
+        "sub_state": "running",
+        "failure_reason": null,
+        "error_message": null
+      }
+    ]
+  },
+  "processes": {
+    "overall_status": "HEALTHY",
+    "records": [
+      {
+        "process_name": "python",
+        "label": "LabOps Agent",
+        "required": true,
+        "check_status": "RUNNING",
+        "health_status": "HEALTHY",
+        "instance_count": 1,
+        "pids": [
+          101
+        ],
+        "total_cpu_percent": 1.5,
+        "total_memory_mb": 42.0,
+        "longest_runtime_seconds": 120.0,
+        "failure_reason": null,
+        "error_message": null
+      }
+    ]
+  },
+  "logs": {
+    "overall_status": "HEALTHY",
+    "records": [
+      {
+        "source_id": "agent-log",
+        "label": "Agent log",
+        "path": "/tmp/labops-agent.log",
+        "required": false,
+        "scan_status": "ANALYZED",
+        "health_status": "HEALTHY",
+        "total_lines_scanned": 5,
+        "match_count": 0,
+        "failure_reason": null,
+        "error_message": null
+      }
+    ]
+  },
+  "incidents": {
+    "active_count": 0,
+    "resolved_count": 0,
+    "records": []
+  }
+}

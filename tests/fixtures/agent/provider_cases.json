@@ -1,0 +1,165 @@
+{
+  "normalized_metadata": {
+    "input": {
+      "host_name": " lab-node-01 ",
+      "address": " 10.0.0.10 ",
+      "pretty_name": " Ubuntu 24.04 LTS ",
+      "platform": " unused-platform ",
+      "architecture": " x86_64 "
+    },
+    "expected": {
+      "host_name": "lab-node-01",
+      "address": "10.0.0.10",
+      "operating_system": "Ubuntu 24.04 LTS",
+      "architecture": "x86_64"
+    }
+  },
+  "operating_system_cases": [
+    {
+      "id": "pretty-name",
+      "release_behavior": "return",
+      "release_info": {
+        "PRETTY_NAME": " Ubuntu 24.04.4 LTS "
+      },
+      "platform": "unused",
+      "expected": "Ubuntu 24.04.4 LTS"
+    },
+    {
+      "id": "name-and-version",
+      "release_behavior": "return",
+      "release_info": {
+        "NAME": " Ubuntu ",
+        "VERSION_ID": " 24.04 "
+      },
+      "platform": "unused",
+      "expected": "Ubuntu 24.04"
+    },
+    {
+      "id": "name-only",
+      "release_behavior": "return",
+      "release_info": {
+        "NAME": " Debian "
+      },
+      "platform": "unused",
+      "expected": "Debian"
+    },
+    {
+      "id": "version-only",
+      "release_behavior": "return",
+      "release_info": {
+        "VERSION_ID": " 12 "
+      },
+      "platform": "unused",
+      "expected": "12"
+    },
+    {
+      "id": "empty-release-fallback",
+      "release_behavior": "return",
+      "release_info": {},
+      "platform": " Linux-6.8.0-x86_64 ",
+      "expected": "Linux-6.8.0-x86_64"
+    },
+    {
+      "id": "os-error-fallback",
+      "release_behavior": "raise_os_error",
+      "release_info": {},
+      "platform": " Linux-6.8.0-WSL2 ",
+      "expected": "Linux-6.8.0-WSL2"
+    }
+  ],
+  "invalid_metadata_cases": [
+    {
+      "id": "empty-host-name",
+      "reader_name": "host_name_reader",
+      "method_name": "host_name",
+      "value": "   ",
+      "error_type": "ValueError",
+      "match": "host_name must not be empty"
+    },
+    {
+      "id": "non-string-address",
+      "reader_name": "address_reader",
+      "method_name": "address",
+      "value": null,
+      "error_type": "TypeError",
+      "match": "address must be a string"
+    },
+    {
+      "id": "empty-architecture",
+      "reader_name": "architecture_reader",
+      "method_name": "architecture",
+      "value": "   ",
+      "error_type": "ValueError",
+      "match": "architecture must not be empty"
+    },
+    {
+      "id": "empty-platform-fallback",
+      "reader_name": "platform_reader",
+      "method_name": "operating_system",
+      "value": "   ",
+      "error_type": "ValueError",
+      "match": "operating_system must not be empty"
+    }
+  ],
+  "invalid_os_release_results": [
+    {
+      "id": "string-result",
+      "value": "Ubuntu 24.04"
+    },
+    {
+      "id": "list-result",
+      "value": []
+    },
+    {
+      "id": "null-result",
+      "value": null
+    }
+  ],
+  "non_callable_readers": [
+    {
+      "id": "host-name-reader",
+      "reader_name": "host_name_reader",
+      "value": "lab-node-01"
+    },
+    {
+      "id": "address-reader",
+      "reader_name": "address_reader",
+      "value": "10.0.0.10"
+    },
+    {
+      "id": "os-release-reader",
+      "reader_name": "os_release_reader",
+      "value": {}
+    },
+    {
+      "id": "platform-reader",
+      "reader_name": "platform_reader",
+      "value": "Linux"
+    },
+    {
+      "id": "architecture-reader",
+      "reader_name": "architecture_reader",
+      "value": "x86_64"
+    }
+  ],
+  "primary_address": {
+    "probe_target": [
+      "192.0.2.1",
+      9
+    ],
+    "udp_success": {
+      "socket_address": " 10.0.0.20 ",
+      "expected": "10.0.0.20"
+    },
+    "dns_fallback": {
+      "host_name": "lab-node-01",
+      "resolved_address": " 10.0.0.21 ",
+      "expected": "10.0.0.21"
+    },
+    "total_failure": {
+      "host_name": "lab-node-01",
+      "dns_error": "Name resolution failed",
+      "expected_message": "Unable to determine the local host address"
+    }
+  }
+}

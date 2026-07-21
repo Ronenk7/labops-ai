@@ -1,0 +1,65 @@
+{
+  "valid_configuration": {
+    "identity": {
+      "host_id_override": " host-001 "
+    },
+    "server": {
+      "base_url": "https://central.example.test/",
+      "heartbeat_path": "/api/v1/hosts/heartbeat",
+      "request_timeout_seconds": 7.5
+    },
+    "schedule": {
+      "interval_seconds": 15
+    },
+    "retry": {
+      "max_attempts": 3,
+      "initial_backoff_seconds": 1,
+      "max_backoff_seconds": 5
+    }
+  },
+  "invalid_server_scheme": {
+    "base_url": "ftp://central.example.test",
+    "heartbeat_path": "/api/v1/hosts/heartbeat",
+    "request_timeout_seconds": 5
+  },
+  "relative_heartbeat_path": {
+    "base_url": "https://central.example.test",
+    "heartbeat_path": "api/v1/hosts/heartbeat",
+    "request_timeout_seconds": 5
+  },
+  "non_positive_schedule": {
+    "interval_seconds": 0
+  },
+  "invalid_retry_order": {
+    "max_attempts": 3,
+    "initial_backoff_seconds": 10,
+    "max_backoff_seconds": 5
+  },
+  "boolean_retry_attempts": {
+    "max_attempts": true,
+    "initial_backoff_seconds": 1,
+    "max_backoff_seconds": 5
+  },
+  "invalid_composition_fields": [
+    {
+      "id": "missing-identity",
+      "field": "identity",
+      "value": null
+    },
+    {
+      "id": "missing-server",
+      "field": "server",
+      "value": null
+    },
+    {
+      "id": "missing-schedule",
+      "field": "schedule",
+      "value": null
+    },
+    {
+      "id": "missing-retry",
+      "field": "retry",
+      "value": null
+    }
+  ]
+}

@@ -12,6 +12,7 @@ class ProcessCheckStatus(StrEnum):
     RUNNING = "RUNNING"
     NOT_RUNNING = "NOT_RUNNING"
     CHECK_ERROR = "CHECK_ERROR"
+    NOT_APPLICABLE = "NOT_APPLICABLE"
 
 
 class ProcessFailureReason(StrEnum):
@@ -171,6 +172,27 @@ class ProcessCheckResult:
 
     def _validate_consistency(self) -> None:
         """Validate status, instances, and error consistency."""
+        if (
+            self.status
+            is ProcessCheckStatus.NOT_APPLICABLE
+        ):
+            if self.instances:
+                raise ValueError(
+                    "A not-applicable process cannot "
+                    "contain instances."
+                )
+
+            if (
+                self.failure_reason is not None
+                or self.error_message is not None
+            ):
+                raise ValueError(
+                    "A not-applicable process cannot "
+                    "contain failure details."
+                )
+
+            return
+
         if self.status is ProcessCheckStatus.RUNNING:
             if not self.instances:
                 raise ValueError(

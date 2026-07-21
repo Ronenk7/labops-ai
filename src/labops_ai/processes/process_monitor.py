@@ -103,7 +103,18 @@ class ProcessMonitor:
         records: list[ProcessHealthRecord] = []
 
         for target in self.config.processes:
-            result = self.checker.check(target)
+            if target.enabled:
+                result = self.checker.check(target)
+            else:
+                result = ProcessCheckResult(
+                    process_name=target.process_name,
+                    label=target.label,
+                    required=target.required,
+                    status=(
+                        ProcessCheckStatus
+                        .NOT_APPLICABLE
+                    ),
+                )
 
             if not isinstance(result, ProcessCheckResult):
                 raise TypeError(
@@ -161,6 +172,12 @@ class ProcessMonitor:
             raise TypeError(
                 "result must be a ProcessCheckResult instance."
             )
+
+        if (
+            result.status
+            is ProcessCheckStatus.NOT_APPLICABLE
+        ):
+            return HealthStatus.HEALTHY
 
         if result.status is ProcessCheckStatus.CHECK_ERROR:
             return HealthStatus.CRITICAL

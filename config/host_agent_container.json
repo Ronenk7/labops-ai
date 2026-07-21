@@ -1,0 +1,20 @@
+{
+  "identity": {
+    "host_id_override": null
+  },
+  "server": {
+    "base_url": "http://host.docker.internal:8000",
+    "heartbeat_path": "/api/v1/hosts/heartbeat",
+    "run_ingestion_path": "/api/v1/runs/ingest",
+    "request_timeout_seconds": 10.0
+  },
+  "schedule": {
+    "interval_seconds": 15.0,
+    "monitoring_interval_seconds": 60.0
+  },
+  "retry": {
+    "max_attempts": 3,
+    "initial_backoff_seconds": 1.0,
+    "max_backoff_seconds": 5.0
+  }
+}

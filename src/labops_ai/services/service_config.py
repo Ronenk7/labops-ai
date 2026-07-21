@@ -127,9 +127,15 @@ class ServiceMonitorConfig:
     command: SystemctlCommandConfig
     services: tuple[ServiceTargetConfig, ...]
     report: ServiceReportConfig
+    enabled: bool = True
 
     def __post_init__(self) -> None:
         """Validate complete service monitor configuration."""
+        if not isinstance(self.enabled, bool):
+            raise TypeError(
+                "enabled must be a boolean."
+            )
+
         if not isinstance(self.command, SystemctlCommandConfig):
             raise TypeError(
                 "command must be a SystemctlCommandConfig instance."

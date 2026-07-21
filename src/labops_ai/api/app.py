@@ -25,11 +25,17 @@ from labops_ai.api.analytics import (
 from labops_ai.api.incident_service import (
     IncidentApiService,
 )
+from labops_ai.api.host_routes import (
+    build_host_router,
+)
 from labops_ai.api.live_routes import (
     build_live_router,
 )
 from labops_ai.api.reporting import (
     RunHistoryCsvReportBuilder,
+)
+from labops_ai.api.run_ingestion import (
+    RunIngestionService,
 )
 from labops_ai.api.run_details import (
     DiagnosticArchiveError,
@@ -42,18 +48,26 @@ from labops_ai.api.schemas import (
     IncidentResponse,
     IncidentSummaryResponse,
     RunDetailsResponse,
+    RunIngestionRequest,
     RunHistoryResponse,
 )
 from labops_ai.api.service import RunHistoryApiService
 from labops_ai.health_status import HealthStatus
+from labops_ai.hosts import HostRegistryService
 from labops_ai.diagnostics import (
     DiagnosticBundleConfigLoader,
+    DiagnosticBundleWriteError,
+    DiagnosticBundleWriter,
+    DiagnosticPayloadError,
 )
 from labops_ai.history import (
     RunHistoryConfigLoader,
     RunHistoryDatabase,
     RunHistoryQuery,
     RunHistoryQueryError,
+    RunHistoryRetentionPolicy,
+    RunHistoryStore,
+    RunHistoryStoreError,
 )
 from labops_ai.incidents import (
     IncidentManagementConfigLoader,
@@ -69,6 +83,9 @@ DASHBOARD_DIRECTORY = FilePath(__file__).with_name(
     "dashboard"
 )
 DASHBOARD_FILE = DASHBOARD_DIRECTORY / "index.html"
+HOSTS_DASHBOARD_FILE = (
+    DASHBOARD_DIRECTORY / "hosts.html"
+)
 DASHBOARD_STATIC_DIRECTORY = (
     DASHBOARD_DIRECTORY / "static"
 )
@@ -85,6 +102,34 @@ def build_default_history_service(
 
     return RunHistoryApiService(reader=query)
 
+
+
+def build_default_run_ingestion_service(
+) -> RunIngestionService:
+    """Build central remote-run persistence."""
+    diagnostic_config = (
+        DiagnosticBundleConfigLoader().load()
+    )
+    history_config = (
+        RunHistoryConfigLoader().load()
+    )
+
+    database = RunHistoryDatabase(
+        config=history_config.storage
+    )
+    retention = RunHistoryRetentionPolicy(
+        config=history_config.retention
+    )
+
+    return RunIngestionService(
+        bundle_writer=DiagnosticBundleWriter(
+            config=diagnostic_config
+        ),
+        history_store=RunHistoryStore(
+            database=database,
+            retention_policy=retention,
+        ),
+    )
 
 
 def build_default_incident_service(
@@ -145,6 +190,8 @@ def create_app(
     history_service: RunHistoryApiService | None = None,
     incident_service: IncidentApiService | None = None,
     run_details_service: RunDetailsApiService | None = None,
+    host_service: HostRegistryService | None = None,
+    run_ingestion_service: RunIngestionService | None = None,
 ) -> FastAPI:
     """Create the API with injectable history access."""
     service = (
@@ -157,6 +204,21 @@ def create_app(
         raise TypeError(
             "history_service must be a "
             "RunHistoryApiService."
+        )
+
+    ingestion_service = (
+        run_ingestion_service
+        if run_ingestion_service is not None
+        else build_default_run_ingestion_service()
+    )
+
+    if not isinstance(
+        ingestion_service,
+        RunIngestionService,
+    ):
+        raise TypeError(
+            "run_ingestion_service must be "
+            "a RunIngestionService."
         )
 
     incident_api_service = (
@@ -244,6 +306,17 @@ def create_app(
         """Return the interactive monitoring dashboard."""
         return FileResponse(
             DASHBOARD_FILE,
+            media_type="text/html",
+        )
+
+    @application.get(
+        "/dashboard/hosts",
+        include_in_schema=False,
+    )
+    def get_hosts_dashboard() -> FileResponse:
+        """Return the multi-host fleet dashboard."""
+        return FileResponse(
+            HOSTS_DASHBOARD_FILE,
             media_type="text/html",
         )
 
@@ -383,6 +456,48 @@ def create_app(
             )
         except RunHistoryQueryError as error:
             raise _history_unavailable(error) from error
+
+    @application.post(
+        "/api/v1/runs/ingest",
+        response_model=RunHistoryResponse,
+        status_code=http_status.HTTP_201_CREATED,
+        tags=["runs"],
+    )
+    def ingest_remote_run(
+        request: RunIngestionRequest,
+    ) -> RunHistoryResponse:
+        """Validate and store one remote monitoring run."""
+        try:
+            entry = ingestion_service.ingest(
+                request.diagnostics
+            )
+        except DiagnosticPayloadError as error:
+            raise HTTPException(
+                status_code=(
+                    http_status
+                    .HTTP_422_UNPROCESSABLE_CONTENT
+                ),
+                detail=(
+                    "Diagnostic payload is invalid: "
+                    f"{error}"
+                ),
+            ) from error
+        except (
+            DiagnosticBundleWriteError,
+            RunHistoryStoreError,
+        ) as error:
+            raise HTTPException(
+                status_code=(
+                    http_status
+                    .HTTP_503_SERVICE_UNAVAILABLE
+                ),
+                detail=(
+                    "Remote monitoring run could not "
+                    "be stored."
+                ),
+            ) from error
+
+        return RunHistoryResponse.from_entry(entry)
 
     @application.get(
         "/api/v1/runs/latest",
@@ -560,6 +675,10 @@ def create_app(
             )
 
         return result
+
+    application.include_router(
+        build_host_router(host_service)
+    )
 
     return application
 
