@@ -10,6 +10,8 @@ from pydantic import (
     field_validator,
 )
 
+from labops_ai.api.schemas import RunHistoryResponse
+
 from labops_ai.hosts import (
     HostAvailability,
     HostHeartbeat,
@@ -126,3 +128,16 @@ class HostResponse(BaseModel):
                 snapshot.heartbeat_age_seconds
             ),
         )
+
+class HostDrilldownResponse(BaseModel):
+    """Represent one Host and its recent monitoring history."""
+
+    model_config = ConfigDict(
+        frozen=True,
+        extra="forbid",
+    )
+
+    host: HostResponse
+    latest_run: RunHistoryResponse | None
+    returned_run_count: int = Field(ge=0)
+    runs: list[RunHistoryResponse]

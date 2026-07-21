@@ -25,6 +25,9 @@ from labops_ai.api.analytics import (
 from labops_ai.api.incident_service import (
     IncidentApiService,
 )
+from labops_ai.api.host_drilldown import (
+    build_host_drilldown_router,
+)
 from labops_ai.api.host_routes import (
     build_host_router,
 )
@@ -85,6 +88,12 @@ DASHBOARD_DIRECTORY = FilePath(__file__).with_name(
 DASHBOARD_FILE = DASHBOARD_DIRECTORY / "index.html"
 HOSTS_DASHBOARD_FILE = (
     DASHBOARD_DIRECTORY / "hosts.html"
+)
+HOST_DASHBOARD_FILE = (
+    DASHBOARD_DIRECTORY / "host.html"
+)
+RUN_DASHBOARD_FILE = (
+    DASHBOARD_DIRECTORY / "run.html"
 )
 DASHBOARD_STATIC_DIRECTORY = (
     DASHBOARD_DIRECTORY / "static"
@@ -317,6 +326,38 @@ def create_app(
         """Return the multi-host fleet dashboard."""
         return FileResponse(
             HOSTS_DASHBOARD_FILE,
+            media_type="text/html",
+        )
+
+    @application.get(
+        "/dashboard/hosts/{host_id}",
+        include_in_schema=False,
+    )
+    def get_host_dashboard(
+        host_id: Annotated[
+            str,
+            ApiPath(min_length=1, max_length=128),
+        ],
+    ) -> FileResponse:
+        """Return the dedicated Host drill-down page."""
+        return FileResponse(
+            HOST_DASHBOARD_FILE,
+            media_type="text/html",
+        )
+
+    @application.get(
+        "/dashboard/runs/{run_id}",
+        include_in_schema=False,
+    )
+    def get_run_dashboard(
+        run_id: Annotated[
+            int,
+            ApiPath(ge=1),
+        ],
+    ) -> FileResponse:
+        'Return the human-readable Run Details page.'
+        return FileResponse(
+            RUN_DASHBOARD_FILE,
             media_type="text/html",
         )
 
@@ -614,6 +655,50 @@ def create_app(
         )
 
     @application.get(
+        "/api/v1/runs/{run_id}/archive",
+        response_class=FileResponse,
+        tags=["runs"],
+    )
+    def download_run_archive(
+        run_id: Annotated[
+            int,
+            ApiPath(ge=1),
+        ],
+    ) -> FileResponse:
+        """Download one validated diagnostic ZIP."""
+        try:
+            archive_path = details_service.get_archive_path(
+                run_id
+            )
+        except DiagnosticArchiveError as error:
+            raise HTTPException(
+                status_code=(
+                    http_status.HTTP_503_SERVICE_UNAVAILABLE
+                ),
+                detail=str(error),
+            ) from error
+        except RunHistoryQueryError as error:
+            raise _history_unavailable(error) from error
+
+        if archive_path is None:
+            raise HTTPException(
+                status_code=http_status.HTTP_404_NOT_FOUND,
+                detail=(
+                    f"Monitoring run {run_id} "
+                    "was not found."
+                ),
+            )
+
+        return FileResponse(
+            path=archive_path,
+            media_type="application/zip",
+            filename=archive_path.name,
+            headers={
+                "Cache-Control": "no-store",
+            },
+        )
+
+    @application.get(
         "/api/v1/runs/{run_id}/details",
         response_model=RunDetailsResponse,
         tags=["runs"],
@@ -678,6 +763,12 @@ def create_app(
 
     application.include_router(
         build_host_router(host_service)
+    )
+    application.include_router(
+        build_host_drilldown_router(
+            host_reader=host_service,
+            run_reader=service,
+        )
     )
 
     return application

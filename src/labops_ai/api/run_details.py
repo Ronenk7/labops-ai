@@ -92,6 +92,13 @@ class DiagnosticArchiveReader:
         self._validate_payload(payload)
         return payload
 
+    def resolve_archive_path(
+        self,
+        archive_path: str | Path,
+    ) -> Path:
+        """Return one validated diagnostic archive path."""
+        return self._resolve_archive_path(archive_path)
+
     def _resolve_archive_path(
         self,
         archive_path: str | Path,
@@ -314,4 +321,18 @@ class RunDetailsApiService:
         return RunDetailsResponse(
             run=run,
             diagnostics=diagnostics,
+        )
+
+    def get_archive_path(
+        self,
+        run_id: int,
+    ) -> Path | None:
+        """Return the validated ZIP path for one run."""
+        run = self.history_service.get_by_id(run_id)
+
+        if run is None:
+            return None
+
+        return self.archive_reader.resolve_archive_path(
+            run.archive_path
         )

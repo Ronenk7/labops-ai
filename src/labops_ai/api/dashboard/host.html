@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1"
+  >
+  <meta
+    name="description"
+    content="LabOps AI monitored Host drill-down workspace"
+  >
+
+  <title>LabOps AI — Host Intelligence</title>
+
+  <link
+    rel="stylesheet"
+    href="/dashboard-assets/dashboard.css"
+  >
+  <link
+    rel="stylesheet"
+    href="/dashboard-assets/dashboard-hosts-page.css?v=1.0.0"
+  >
+  <link
+    rel="stylesheet"
+    href="/dashboard-assets/dashboard-host-detail.css?v=1.0.0"
+  >
+
+  <script
+    src="/dashboard-assets/dashboard-host-detail.js?v=1.0.0"
+    defer
+  ></script>
+</head>
+
+<body class="host-detail-page">
+  <header class="fleet-topbar">
+    <div class="fleet-topbar__inner">
+      <a class="fleet-brand" href="/dashboard">
+        <span class="fleet-brand__mark">L</span>
+
+        <span>
+          <strong>LabOps AI</strong>
+          <small>Infrastructure Intelligence</small>
+        </span>
+      </a>
+
+      <nav
+        class="fleet-navigation"
+        aria-label="Dashboard navigation"
+      >
+        <a href="/dashboard">Overview</a>
+
+        <a
+          class="fleet-navigation__active"
+          href="/dashboard/hosts"
+        >
+          Host Fleet
+        </a>
+      </nav>
+
+      <div class="fleet-topbar__actions">
+        <div
+          id="host-api-state"
+          class="fleet-api-state"
+        >
+          <span class="fleet-api-state__dot"></span>
+          <span id="host-api-label">Connecting</span>
+        </div>
+
+        <button
+          id="host-refresh"
+          class="fleet-button fleet-button--light"
+          type="button"
+        >
+          <span class="fleet-button__icon">↻</span>
+          Refresh
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="host-detail-main">
+    <section class="host-detail-hero">
+      <div class="host-detail-hero__glow"></div>
+
+      <a
+        class="host-detail-back"
+        href="/dashboard/hosts"
+      >
+        ← Back to Host Fleet
+      </a>
+
+      <div class="host-detail-hero__content">
+        <div>
+          <p class="fleet-eyebrow">
+            Host intelligence workspace
+          </p>
+
+          <div class="host-detail-title-row">
+            <div>
+              <h1 id="host-name">Loading Host…</h1>
+              <code id="host-id">Waiting for API</code>
+            </div>
+
+            <span
+              id="host-availability"
+              class="host-availability
+                     host-availability--unknown"
+            >
+              UNKNOWN
+            </span>
+          </div>
+
+          <p class="host-detail-description">
+            Availability, monitoring history, component
+            health, incidents, and diagnostic evidence for
+            one Agent-managed Linux Host.
+          </p>
+        </div>
+
+        <div class="host-detail-freshness">
+          <span>Last heartbeat</span>
+          <strong id="host-heartbeat-age">—</strong>
+          <small id="host-updated">
+            Waiting for Host data
+          </small>
+        </div>
+      </div>
+    </section>
+
+    <div
+      id="host-message"
+      class="host-detail-message"
+      role="status"
+      aria-live="polite"
+    >
+      Loading Host intelligence…
+    </div>
+
+    <div id="host-content" hidden>
+      <section
+        class="host-summary-grid"
+        aria-label="Host monitoring summary"
+      >
+        <article class="host-summary-card">
+          <span>Latest health</span>
+          <strong id="host-latest-status">—</strong>
+          <small>Most recent monitoring run</small>
+        </article>
+
+        <article class="host-summary-card">
+          <span>Returned runs</span>
+          <strong id="host-run-count">0</strong>
+          <small>Current history window</small>
+        </article>
+
+        <article class="host-summary-card">
+          <span>Incidents</span>
+          <strong id="host-incident-count">0</strong>
+          <small>Across returned runs</small>
+        </article>
+
+        <article class="host-summary-card">
+          <span>Last monitoring run</span>
+          <strong
+            id="host-last-run"
+            class="host-summary-card__date"
+          >
+            —
+          </strong>
+          <small>Central run ingestion time</small>
+        </article>
+      </section>
+
+      <section class="host-detail-layout">
+        <article class="host-panel">
+          <header class="host-panel__header">
+            <div>
+              <p class="fleet-eyebrow">Agent identity</p>
+              <h2>Host details</h2>
+            </div>
+          </header>
+
+          <div
+            id="host-identity-grid"
+            class="host-identity-grid"
+          ></div>
+        </article>
+
+        <article class="host-panel">
+          <header class="host-panel__header">
+            <div>
+              <p class="fleet-eyebrow">Current state</p>
+              <h2>Latest component health</h2>
+            </div>
+          </header>
+
+          <div
+            id="host-component-grid"
+            class="host-component-grid"
+          ></div>
+        </article>
+      </section>
+
+      <section class="host-panel host-runs-panel">
+        <header class="host-panel__header">
+          <div>
+            <p class="fleet-eyebrow">
+              Monitoring evidence
+            </p>
+            <h2>Run history</h2>
+            <p id="host-runs-description">
+              Loading recent monitoring runs…
+            </p>
+          </div>
+
+          <label class="host-limit-control">
+            <span>History limit</span>
+            <select id="host-run-limit">
+              <option value="10">10 runs</option>
+              <option value="20" selected>20 runs</option>
+              <option value="50">50 runs</option>
+              <option value="100">100 runs</option>
+            </select>
+          </label>
+        </header>
+
+        <div class="host-table-wrapper">
+          <table class="host-runs-table">
+            <thead>
+              <tr>
+                <th>Run</th>
+                <th>Generated</th>
+                <th>Overall</th>
+                <th>System</th>
+                <th>Network</th>
+                <th>Services</th>
+                <th>Processes</th>
+                <th>Logs</th>
+                <th>Incidents</th>
+                <th>Evidence</th>
+              </tr>
+            </thead>
+
+            <tbody id="host-runs-body"></tbody>
+          </table>
+        </div>
+
+        <div
+          id="host-runs-empty"
+          class="host-runs-empty"
+          hidden
+        >
+          This Host has not delivered a monitoring run yet.
+        </div>
+      </section>
+    </div>
+  </main>
+</body>
+</html>
