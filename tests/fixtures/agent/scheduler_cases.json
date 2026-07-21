@@ -1,0 +1,22 @@
+{
+  "continuous_run": {
+    "cycle_count": 3,
+    "expected_scheduler_sleeps": [
+      15.0,
+      15.0
+    ]
+  },
+  "stop_before_first_cycle": {
+    "expected_send_count": 0,
+    "expected_scheduler_sleeps": []
+  },
+  "delivery_failure": {
+    "message": "Central API is unavailable.",
+    "expected_attempts": 3,
+    "expected_retry_sleeps": [
+      1.0,
+      2.0
+    ],
+    "expected_scheduler_sleeps": []
+  }
+}

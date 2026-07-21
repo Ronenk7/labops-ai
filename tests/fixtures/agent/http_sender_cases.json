@@ -1,0 +1,111 @@
+{
+  "heartbeat": {
+    "host_id": "host-001",
+    "host_name": "lab-node-01",
+    "address": "10.0.0.10",
+    "operating_system": "Ubuntu 24.04 LTS",
+    "architecture": "x86_64",
+    "agent_version": "0.1.0",
+    "observed_at": "2026-07-20T18:00:00+00:00"
+  },
+  "request": {
+    "url": " http://127.0.0.1:8000/api/v1/hosts/heartbeat ",
+    "expected_url": "http://127.0.0.1:8000/api/v1/hosts/heartbeat",
+    "timeout_seconds": 5,
+    "expected_timeout_seconds": 5.0,
+    "expected_payload": {
+      "host_id": "host-001",
+      "host_name": "lab-node-01",
+      "address": "10.0.0.10",
+      "operating_system": "Ubuntu 24.04 LTS",
+      "architecture": "x86_64",
+      "agent_version": "0.1.0",
+      "observed_at": "2026-07-20T18:00:00+00:00"
+    }
+  },
+  "successful_status_codes": [
+    200,
+    201,
+    204,
+    299
+  ],
+  "network_failures": [
+    {
+      "id": "url-error",
+      "error_kind": "url_error",
+      "message": "Connection refused"
+    },
+    {
+      "id": "timeout-error",
+      "error_kind": "timeout",
+      "message": "Request timed out"
+    },
+    {
+      "id": "operating-system-error",
+      "error_kind": "os_error",
+      "message": "Network unavailable"
+    }
+  ],
+  "http_failure_status_codes": [
+    {
+      "id": "bad-request",
+      "status_code": 400
+    },
+    {
+      "id": "server-error",
+      "status_code": 503
+    }
+  ],
+  "invalid_urls": [
+    {
+      "id": "non-string-url",
+      "value": 123,
+      "error_type": "TypeError",
+      "match": "url must be a string"
+    },
+    {
+      "id": "empty-url",
+      "value": "   ",
+      "error_type": "ValueError",
+      "match": "url must not be empty"
+    }
+  ],
+  "invalid_timeout_types": [
+    {
+      "id": "boolean-timeout",
+      "value": true
+    },
+    {
+      "id": "string-timeout",
+      "value": "5"
+    },
+    {
+      "id": "null-timeout",
+      "value": null
+    }
+  ],
+  "non_positive_timeouts": [
+    {
+      "id": "zero-timeout",
+      "value": 0
+    },
+    {
+      "id": "negative-timeout",
+      "value": -1
+    }
+  ],
+  "non_finite_timeouts": [
+    {
+      "id": "nan-timeout",
+      "value": "nan"
+    },
+    {
+      "id": "positive-infinity",
+      "value": "inf"
+    },
+    {
+      "id": "negative-infinity",
+      "value": "-inf"
+    }
+  ]
+}

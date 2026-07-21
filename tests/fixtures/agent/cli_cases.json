@@ -1,0 +1,39 @@
+{
+  "heartbeat": {
+    "host_id": "host-001",
+    "host_name": "lab-node-01",
+    "address": "10.0.0.10",
+    "operating_system": "Ubuntu 24.04 LTS",
+    "architecture": "x86_64",
+    "agent_version": "0.1.0",
+    "observed_at": "2026-07-20T18:00:00+00:00"
+  },
+  "expected_success_output": "Heartbeat sent successfully: host_id=host-001, address=10.0.0.10, observed_at=2026-07-20T18:00:00+00:00\n",
+  "runtime_failures": [
+    {
+      "id": "os-error",
+      "error_type": "OSError",
+      "message": "configuration file unavailable"
+    },
+    {
+      "id": "runtime-error",
+      "error_type": "RuntimeError",
+      "message": "central API unavailable"
+    },
+    {
+      "id": "type-error",
+      "error_type": "TypeError",
+      "message": "invalid runtime dependency"
+    },
+    {
+      "id": "value-error",
+      "error_type": "ValueError",
+      "message": "invalid configuration value"
+    }
+  ],
+  "help_tokens": [
+    "usage: labops-agent",
+    "--once",
+    "--config"
+  ]
+}

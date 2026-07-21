@@ -1,0 +1,8 @@
+{
+  "version_resolution": {
+    "installed_value": " 0.2.0 ",
+    "expected_installed": "0.2.0",
+    "expected_fallback": "0.1.0-dev",
+    "empty_value": "   "
+  }
+}

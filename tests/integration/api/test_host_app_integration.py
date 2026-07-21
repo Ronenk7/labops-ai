@@ -1,13 +1,11 @@
 """Integration tests for host routes in the main API."""
 from __future__ import annotations
-
 import pytest
 from fastapi.testclient import TestClient
-
 from labops_ai.api.app import app
 
 
-pytestmark = pytest.mark.unit
+pytestmark = pytest.mark.integration
 
 
 def test_main_app_registers_multi_host_routes() -> None:

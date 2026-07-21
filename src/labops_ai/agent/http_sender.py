@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
+from math import isfinite
 from typing import Any, Callable
 from urllib.error import URLError
 from urllib.request import Request, urlopen
@@ -71,6 +72,11 @@ class HttpHeartbeatSender:
         normalized_timeout = float(
             timeout_seconds
         )
+
+        if not isfinite(normalized_timeout):
+            raise ValueError(
+                "timeout_seconds must be finite."
+            )
 
         if normalized_timeout <= 0:
             raise ValueError(

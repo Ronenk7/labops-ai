@@ -29,6 +29,9 @@ from labops_ai.agent.runner import (
     run_agent_once,
     utc_now,
 )
+from labops_ai.agent.scheduler import (
+    run_agent_forever,
+)
 
 
 __all__ = [
@@ -47,6 +50,7 @@ __all__ = [
     "build_default_agent",
     "resolve_agent_version",
     "resolve_primary_address",
+    "run_agent_forever",
     "run_agent_once",
     "utc_now",
 ]

@@ -1,0 +1,74 @@
+{
+  "base_configuration": {
+    "identity": {
+      "host_id_override": null
+    },
+    "server": {
+      "base_url": "http://127.0.0.1:8000",
+      "heartbeat_path": "/api/v1/hosts/heartbeat",
+      "request_timeout_seconds": 5
+    },
+    "schedule": {
+      "interval_seconds": 15
+    },
+    "retry": {
+      "max_attempts": 3,
+      "initial_backoff_seconds": 1,
+      "max_backoff_seconds": 5
+    }
+  },
+  "host_metadata": {
+    "input": {
+      "host_name": " lab-node-01 ",
+      "address": " 10.0.0.10 ",
+      "operating_system": " Ubuntu 24.04 LTS ",
+      "architecture": " x86_64 ",
+      "agent_version": " 0.1.0 ",
+      "observed_at": "2026-07-20T18:00:00+00:00"
+    },
+    "expected": {
+      "host_id": "lab-node-01",
+      "host_name": "lab-node-01",
+      "address": "10.0.0.10",
+      "operating_system": "Ubuntu 24.04 LTS",
+      "architecture": "x86_64",
+      "agent_version": "0.1.0",
+      "observed_at": "2026-07-20T18:00:00+00:00"
+    }
+  },
+  "host_id_override": {
+    "input": " host-override-001 ",
+    "expected": "host-override-001"
+  },
+  "retry_success": {
+    "failures_before_success": 2,
+    "expected_attempts": 3,
+    "expected_sleeps": [
+      1.0,
+      2.0
+    ]
+  },
+  "retry_exhaustion": {
+    "failures_before_success": 99,
+    "expected_attempts": 3,
+    "expected_sleeps": [
+      1.0,
+      2.0
+    ]
+  },
+  "backoff_cap": {
+    "retry": {
+      "max_attempts": 5,
+      "initial_backoff_seconds": 3,
+      "max_backoff_seconds": 5
+    },
+    "failures_before_success": 4,
+    "expected_attempts": 5,
+    "expected_sleeps": [
+      3.0,
+      5.0,
+      5.0,
+      5.0
+    ]
+  }
+}

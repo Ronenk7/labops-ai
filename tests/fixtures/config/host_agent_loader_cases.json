@@ -1,0 +1,68 @@
+{
+  "valid_custom_configuration": {
+    "identity": {
+      "host_id_override": "custom-host-001"
+    },
+    "server": {
+      "base_url": "http://10.0.0.5:9000",
+      "heartbeat_path": "/custom/heartbeat",
+      "request_timeout_seconds": 8
+    },
+    "schedule": {
+      "interval_seconds": 20
+    },
+    "retry": {
+      "max_attempts": 4,
+      "initial_backoff_seconds": 2,
+      "max_backoff_seconds": 8
+    }
+  },
+  "missing_section_configuration": {
+    "identity": {
+      "host_id_override": null
+    },
+    "server": {
+      "base_url": "http://127.0.0.1:8000",
+      "heartbeat_path": "/api/v1/hosts/heartbeat",
+      "request_timeout_seconds": 5
+    },
+    "schedule": {
+      "interval_seconds": 15
+    }
+  },
+  "unsupported_top_level_key_configuration": {
+    "identity": {
+      "host_id_override": null
+    },
+    "server": {
+      "base_url": "http://127.0.0.1:8000",
+      "heartbeat_path": "/api/v1/hosts/heartbeat",
+      "request_timeout_seconds": 5
+    },
+    "schedule": {
+      "interval_seconds": 15
+    },
+    "retry": {
+      "max_attempts": 3,
+      "initial_backoff_seconds": 1,
+      "max_backoff_seconds": 5
+    },
+    "unexpected": {}
+  },
+  "invalid_section_type_configuration": {
+    "identity": {
+      "host_id_override": null
+    },
+    "server": {
+      "base_url": "http://127.0.0.1:8000",
+      "heartbeat_path": "/api/v1/hosts/heartbeat",
+      "request_timeout_seconds": 5
+    },
+    "schedule": [],
+    "retry": {
+      "max_attempts": 3,
+      "initial_backoff_seconds": 1,
+      "max_backoff_seconds": 5
+    }
+  }
+}

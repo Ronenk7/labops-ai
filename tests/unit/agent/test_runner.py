@@ -1,7 +1,9 @@
-"""Tests for host-agent runtime composition."""
+"""Unit tests for host-agent runtime composition."""
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime
+from importlib.metadata import PackageNotFoundError
+from unittest.mock import patch
 
 import pytest
 
@@ -14,32 +16,42 @@ from labops_ai.agent import (
     HostAgentServerConfig,
     LocalHostProviders,
     build_default_agent,
+    resolve_agent_version,
     run_agent_once,
     utc_now,
 )
 from labops_ai.hosts import HostHeartbeat
+from tests.support.fixture_loader import (
+    load_test_fixture,
+)
 
 
 pytestmark = pytest.mark.unit
 
-BASE_TIME = datetime(
-    2026,
-    7,
-    20,
-    18,
-    0,
-    tzinfo=timezone.utc,
+AGENT_CASES = load_test_fixture(
+    "agent/host_agent_cases.json"
+)
+RUNNER_CASES = load_test_fixture(
+    "agent/runner_cases.json"
+)
+
+CONFIGURATION = AGENT_CASES[
+    "base_configuration"
+]
+METADATA = AGENT_CASES["host_metadata"]
+BASE_TIME = datetime.fromisoformat(
+    METADATA["input"]["observed_at"]
 )
 
 
 class FakeConfigLoader:
-    """Return deterministic agent configuration."""
+    """Return deterministic Agent configuration."""
 
     def __init__(
         self,
         config: HostAgentConfig,
     ) -> None:
-        """Initialize the fake loader."""
+        """Store the configuration."""
         self.config = config
         self.calls = 0
 
@@ -50,15 +62,15 @@ class FakeConfigLoader:
 
 
 class InvalidConfigLoader:
-    """Return an invalid configuration object."""
+    """Return an unsupported configuration value."""
 
     def load(self):
-        """Return an unsupported value."""
+        """Return invalid loader output."""
         return {}
 
 
 class RecordingSender:
-    """Record sent heartbeats."""
+    """Record delivered heartbeat data."""
 
     def __init__(self) -> None:
         """Initialize an empty call list."""
@@ -84,39 +96,43 @@ class RecordingSender:
 
 
 def build_config() -> HostAgentConfig:
-    """Build deterministic runtime configuration."""
+    """Build runtime configuration from fixture data."""
     return HostAgentConfig(
         identity=HostAgentIdentityConfig(
-            host_id_override="host-001",
+            **CONFIGURATION["identity"]
         ),
         server=HostAgentServerConfig(
-            base_url="http://127.0.0.1:8000",
-            heartbeat_path=(
-                "/api/v1/hosts/heartbeat"
-            ),
-            request_timeout_seconds=5,
+            **CONFIGURATION["server"]
         ),
         schedule=HostAgentScheduleConfig(
-            interval_seconds=15,
+            **CONFIGURATION["schedule"]
         ),
         retry=HostAgentRetryConfig(
-            max_attempts=3,
-            initial_backoff_seconds=1,
-            max_backoff_seconds=5,
+            **CONFIGURATION["retry"]
         ),
     )
 
 
 def build_providers() -> LocalHostProviders:
-    """Build deterministic local providers."""
+    """Build local providers from fixture data."""
+    metadata = METADATA["input"]
+
     return LocalHostProviders(
-        host_name_reader=lambda: "lab-node-01",
-        address_reader=lambda: "10.0.0.10",
+        host_name_reader=(
+            lambda: metadata["host_name"]
+        ),
+        address_reader=(
+            lambda: metadata["address"]
+        ),
         os_release_reader=lambda: {
-            "PRETTY_NAME": "Ubuntu 24.04 LTS",
+            "PRETTY_NAME": metadata[
+                "operating_system"
+            ],
         },
         platform_reader=lambda: "unused",
-        architecture_reader=lambda: "x86_64",
+        architecture_reader=(
+            lambda: metadata["architecture"]
+        ),
     )
 
 
@@ -133,33 +149,47 @@ def test_builds_complete_runtime_agent() -> None:
         sender=sender,
         clock=lambda: BASE_TIME,
         sleeper=lambda seconds: None,
-        agent_version="0.1.0",
+        agent_version=(
+            METADATA["input"]["agent_version"]
+        ),
     )
 
     assert isinstance(agent, HostAgent)
 
     heartbeat = agent.run_once()
+    expected = METADATA["expected"]
 
     assert loader.calls == 1
-    assert heartbeat.host_id == "host-001"
-    assert heartbeat.host_name == "lab-node-01"
-    assert heartbeat.address == "10.0.0.10"
-    assert (
-        heartbeat.operating_system
-        == "Ubuntu 24.04 LTS"
+    assert heartbeat.host_id == expected["host_id"]
+    assert heartbeat.host_name == (
+        expected["host_name"]
     )
-    assert heartbeat.architecture == "x86_64"
-    assert heartbeat.agent_version == "0.1.0"
+    assert heartbeat.address == expected["address"]
+    assert heartbeat.operating_system == (
+        expected["operating_system"]
+    )
+    assert heartbeat.architecture == (
+        expected["architecture"]
+    )
+    assert heartbeat.agent_version == (
+        expected["agent_version"]
+    )
     assert heartbeat.observed_at == BASE_TIME
 
     assert sender.calls == [
         (
             (
-                "http://127.0.0.1:8000"
-                "/api/v1/hosts/heartbeat"
+                CONFIGURATION["server"]["base_url"]
+                + CONFIGURATION["server"][
+                    "heartbeat_path"
+                ]
             ),
             heartbeat,
-            5.0,
+            float(
+                CONFIGURATION["server"][
+                    "request_timeout_seconds"
+                ]
+            ),
         )
     ]
 
@@ -175,26 +205,82 @@ def test_runs_one_supplied_agent_cycle() -> None:
         providers=build_providers(),
         sender=sender,
         clock=lambda: BASE_TIME,
-        agent_version="0.1.0",
+        agent_version=(
+            METADATA["input"]["agent_version"]
+        ),
     )
 
     heartbeat = run_agent_once(agent)
 
-    assert heartbeat.host_id == "host-001"
+    assert heartbeat.host_id == (
+        METADATA["expected"]["host_id"]
+    )
     assert len(sender.calls) == 1
 
 
 def test_utc_now_is_timezone_aware() -> None:
-    """Return a valid UTC timestamp."""
+    """Return a timezone-aware UTC timestamp."""
     current_time = utc_now()
 
     assert current_time.tzinfo is not None
     assert current_time.utcoffset() is not None
-    assert current_time.utcoffset().total_seconds() == 0
+    assert (
+        current_time.utcoffset().total_seconds()
+        == 0
+    )
+
+
+def test_resolves_installed_agent_version() -> None:
+    """Normalize installed package metadata."""
+    case = RUNNER_CASES[
+        "version_resolution"
+    ]
+
+    with patch(
+        "labops_ai.agent.runner.version",
+        return_value=case["installed_value"],
+    ):
+        result = resolve_agent_version()
+
+    assert result == case["expected_installed"]
+
+
+def test_falls_back_to_development_version() -> None:
+    """Use a development version without package metadata."""
+    case = RUNNER_CASES[
+        "version_resolution"
+    ]
+
+    with patch(
+        "labops_ai.agent.runner.version",
+        side_effect=PackageNotFoundError(
+            "labops-ai"
+        ),
+    ):
+        result = resolve_agent_version()
+
+    assert result == case["expected_fallback"]
+
+
+def test_rejects_empty_resolved_version() -> None:
+    """Reject empty package version metadata."""
+    case = RUNNER_CASES[
+        "version_resolution"
+    ]
+
+    with patch(
+        "labops_ai.agent.runner.version",
+        return_value=case["empty_value"],
+    ):
+        with pytest.raises(
+            RuntimeError,
+            match="must not be empty",
+        ):
+            resolve_agent_version()
 
 
 def test_rejects_loader_without_load_method() -> None:
-    """Require a configuration loader contract."""
+    """Require the configuration loader contract."""
     with pytest.raises(
         TypeError,
         match="callable load method",
@@ -212,6 +298,20 @@ def test_rejects_invalid_loaded_configuration() -> None:
     ):
         build_default_agent(
             config_loader=InvalidConfigLoader(),
+        )
+
+
+def test_rejects_invalid_providers() -> None:
+    """Require the local provider implementation."""
+    with pytest.raises(
+        TypeError,
+        match="LocalHostProviders instance",
+    ):
+        build_default_agent(
+            config_loader=FakeConfigLoader(
+                build_config()
+            ),
+            providers=object(),
         )
 
 

@@ -1,7 +1,9 @@
-"""Tests for the remote host agent."""
+"""Unit tests for the remote host agent."""
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from collections.abc import Callable
+from datetime import datetime
+from typing import Any
 
 import pytest
 
@@ -15,22 +17,25 @@ from labops_ai.agent import (
     HostAgentServerConfig,
 )
 from labops_ai.hosts import HostHeartbeat
+from tests.support.fixture_loader import (
+    load_test_fixture,
+)
 
 
 pytestmark = pytest.mark.unit
 
-BASE_TIME = datetime(
-    2026,
-    7,
-    20,
-    18,
-    0,
-    tzinfo=timezone.utc,
+CASES = load_test_fixture(
+    "agent/host_agent_cases.json"
+)
+BASE_CONFIGURATION = CASES["base_configuration"]
+METADATA = CASES["host_metadata"]
+BASE_TIME = datetime.fromisoformat(
+    METADATA["input"]["observed_at"]
 )
 
 
-class FakeHeartbeatSender:
-    """Record heartbeat delivery attempts."""
+class RecordingHeartbeatSender:
+    """Record successful heartbeat deliveries."""
 
     def __init__(self) -> None:
         """Initialize an empty call list."""
@@ -45,7 +50,7 @@ class FakeHeartbeatSender:
         heartbeat: HostHeartbeat,
         timeout_seconds: float,
     ) -> None:
-        """Record one simulated delivery."""
+        """Record one heartbeat delivery."""
         self.calls.append(
             (
                 url,
@@ -55,16 +60,27 @@ class FakeHeartbeatSender:
         )
 
 
-class FailingHeartbeatSender:
-    """Fail temporarily before successful delivery."""
+class ControlledHeartbeatSender:
+    """Fail a configured number of delivery attempts."""
 
     def __init__(
         self,
         failures_before_success: int,
+        *,
+        error_factory: Callable[
+            [], Exception
+        ] | None = None,
     ) -> None:
-        """Initialize deterministic failures."""
+        """Initialize deterministic delivery behavior."""
         self.failures_before_success = (
             failures_before_success
+        )
+        self.error_factory = (
+            error_factory
+            if error_factory is not None
+            else lambda: HeartbeatDeliveryError(
+                "Central API is unavailable."
+            )
         )
         self.attempts = 0
 
@@ -75,71 +91,110 @@ class FailingHeartbeatSender:
         heartbeat: HostHeartbeat,
         timeout_seconds: float,
     ) -> None:
-        """Fail until the configured attempt."""
+        """Fail until the configured attempt count."""
         self.attempts += 1
 
         if (
             self.attempts
             <= self.failures_before_success
         ):
-            raise HeartbeatDeliveryError(
-                "Central API is unavailable."
-            )
+            raise self.error_factory()
 
 
-def build_config() -> HostAgentConfig:
-    """Build deterministic agent configuration."""
+def build_config(
+    *,
+    host_id_override: str | None = None,
+    retry_overrides: (
+        dict[str, Any] | None
+    ) = None,
+) -> HostAgentConfig:
+    """Build agent configuration from fixture data."""
+    retry_values = {
+        **BASE_CONFIGURATION["retry"],
+        **(retry_overrides or {}),
+    }
+
     return HostAgentConfig(
         identity=HostAgentIdentityConfig(
-            host_id_override=None,
+            host_id_override=host_id_override,
         ),
         server=HostAgentServerConfig(
-            base_url="http://127.0.0.1:8000",
-            heartbeat_path=(
-                "/api/v1/hosts/heartbeat"
-            ),
-            request_timeout_seconds=5,
+            **BASE_CONFIGURATION["server"]
         ),
         schedule=HostAgentScheduleConfig(
-            interval_seconds=15,
+            **BASE_CONFIGURATION["schedule"]
         ),
         retry=HostAgentRetryConfig(
-            max_attempts=3,
-            initial_backoff_seconds=1,
-            max_backoff_seconds=5,
+            **retry_values
         ),
+    )
+
+
+def build_agent(
+    sender: object,
+    *,
+    config: HostAgentConfig | None = None,
+    sleeper: Callable[
+        [float], None
+    ] = lambda seconds: None,
+) -> HostAgent:
+    """Build a deterministic Agent from fixture data."""
+    metadata = METADATA["input"]
+
+    return HostAgent(
+        config=(
+            config
+            if config is not None
+            else build_config()
+        ),
+        sender=sender,
+        clock=lambda: BASE_TIME,
+        host_name_provider=(
+            lambda: metadata["host_name"]
+        ),
+        address_provider=(
+            lambda: metadata["address"]
+        ),
+        operating_system_provider=(
+            lambda: metadata[
+                "operating_system"
+            ]
+        ),
+        architecture_provider=(
+            lambda: metadata["architecture"]
+        ),
+        agent_version=metadata["agent_version"],
+        sleeper=sleeper,
     )
 
 
 def test_builds_and_sends_one_heartbeat() -> None:
-    """Collect host metadata and send one heartbeat."""
-    sender = FakeHeartbeatSender()
-
-    agent = HostAgent(
-        config=build_config(),
-        sender=sender,
-        clock=lambda: BASE_TIME,
-        host_name_provider=lambda: "lab-node-01",
-        address_provider=lambda: "10.0.0.10",
-        operating_system_provider=(
-            lambda: "Ubuntu 24.04"
-        ),
-        architecture_provider=lambda: "x86_64",
-        agent_version="0.1.0",
-    )
+    """Collect, normalize and send host metadata."""
+    sender = RecordingHeartbeatSender()
+    agent = build_agent(sender)
 
     heartbeat = agent.run_once()
+    expected = METADATA["expected"]
 
-    assert heartbeat.host_id == "lab-node-01"
-    assert heartbeat.host_name == "lab-node-01"
-    assert heartbeat.address == "10.0.0.10"
-    assert (
-        heartbeat.operating_system
-        == "Ubuntu 24.04"
+    assert heartbeat.host_id == expected["host_id"]
+    assert heartbeat.host_name == (
+        expected["host_name"]
     )
-    assert heartbeat.architecture == "x86_64"
-    assert heartbeat.agent_version == "0.1.0"
-    assert heartbeat.observed_at == BASE_TIME
+    assert heartbeat.address == (
+        expected["address"]
+    )
+    assert heartbeat.operating_system == (
+        expected["operating_system"]
+    )
+    assert heartbeat.architecture == (
+        expected["architecture"]
+    )
+    assert heartbeat.agent_version == (
+        expected["agent_version"]
+    )
+    assert heartbeat.observed_at == datetime.fromisoformat(
+        expected["observed_at"]
+    )
 
     assert sender.calls == [
         (
@@ -153,29 +208,146 @@ def test_builds_and_sends_one_heartbeat() -> None:
     ]
 
 
-def test_retries_failed_heartbeat_delivery() -> None:
-    """Retry temporary delivery failures."""
-    sender = FailingHeartbeatSender(
-        failures_before_success=2
-    )
-    sleep_calls: list[float] = []
+def test_uses_configured_host_id_override() -> None:
+    """Prefer an explicit host identifier override."""
+    case = CASES["host_id_override"]
+    sender = RecordingHeartbeatSender()
 
-    agent = HostAgent(
-        config=build_config(),
-        sender=sender,
-        clock=lambda: BASE_TIME,
-        host_name_provider=lambda: "lab-node-01",
-        address_provider=lambda: "10.0.0.10",
-        operating_system_provider=(
-            lambda: "Ubuntu 24.04"
+    agent = build_agent(
+        sender,
+        config=build_config(
+            host_id_override=case["input"],
         ),
-        architecture_provider=lambda: "x86_64",
-        agent_version="0.1.0",
-        sleeper=sleep_calls.append,
     )
 
     heartbeat = agent.run_once()
 
-    assert heartbeat.host_id == "lab-node-01"
-    assert sender.attempts == 3
-    assert sleep_calls == [1.0, 2.0]
+    assert heartbeat.host_id == case["expected"]
+    assert heartbeat.host_name == (
+        METADATA["expected"]["host_name"]
+    )
+
+
+def test_retries_temporary_delivery_failures() -> None:
+    """Retry until heartbeat delivery succeeds."""
+    case = CASES["retry_success"]
+    sender = ControlledHeartbeatSender(
+        case["failures_before_success"]
+    )
+    sleep_calls: list[float] = []
+
+    heartbeat = build_agent(
+        sender,
+        sleeper=sleep_calls.append,
+    ).run_once()
+
+    assert heartbeat.host_id == (
+        METADATA["expected"]["host_id"]
+    )
+    assert sender.attempts == (
+        case["expected_attempts"]
+    )
+    assert sleep_calls == case["expected_sleeps"]
+
+
+def test_raises_after_retry_budget_is_exhausted() -> None:
+    """Raise the final delivery error after all attempts."""
+    case = CASES["retry_exhaustion"]
+    sender = ControlledHeartbeatSender(
+        case["failures_before_success"]
+    )
+    sleep_calls: list[float] = []
+
+    with pytest.raises(
+        HeartbeatDeliveryError,
+        match="Central API is unavailable",
+    ):
+        build_agent(
+            sender,
+            sleeper=sleep_calls.append,
+        ).run_once()
+
+    assert sender.attempts == (
+        case["expected_attempts"]
+    )
+    assert sleep_calls == case["expected_sleeps"]
+
+
+def test_caps_exponential_retry_backoff() -> None:
+    """Never sleep beyond the configured maximum."""
+    case = CASES["backoff_cap"]
+    sender = ControlledHeartbeatSender(
+        case["failures_before_success"]
+    )
+    sleep_calls: list[float] = []
+
+    build_agent(
+        sender,
+        config=build_config(
+            retry_overrides=case["retry"],
+        ),
+        sleeper=sleep_calls.append,
+    ).run_once()
+
+    assert sender.attempts == (
+        case["expected_attempts"]
+    )
+    assert sleep_calls == case["expected_sleeps"]
+
+
+def test_does_not_retry_unexpected_errors() -> None:
+    """Retry only explicit delivery failures."""
+    sender = ControlledHeartbeatSender(
+        failures_before_success=1,
+        error_factory=lambda: ValueError(
+            "Invalid sender state."
+        ),
+    )
+    sleep_calls: list[float] = []
+
+    with pytest.raises(
+        ValueError,
+        match="Invalid sender state",
+    ):
+        build_agent(
+            sender,
+            sleeper=sleep_calls.append,
+        ).run_once()
+
+    assert sender.attempts == 1
+    assert sleep_calls == []
+
+
+def test_rejects_sender_without_send_method() -> None:
+    """Require the sender protocol."""
+    with pytest.raises(
+        TypeError,
+        match="callable send method",
+    ):
+        build_agent(object())
+
+
+def test_rejects_non_callable_dependency() -> None:
+    """Require callable metadata providers."""
+    metadata = METADATA["input"]
+
+    with pytest.raises(
+        TypeError,
+        match="host_name_provider must be callable",
+    ):
+        HostAgent(
+            config=build_config(),
+            sender=RecordingHeartbeatSender(),
+            clock=lambda: BASE_TIME,
+            host_name_provider=metadata["host_name"],
+            address_provider=lambda: metadata["address"],
+            operating_system_provider=(
+                lambda: metadata[
+                    "operating_system"
+                ]
+            ),
+            architecture_provider=(
+                lambda: metadata["architecture"]
+            ),
+            agent_version=metadata["agent_version"],
+        )
