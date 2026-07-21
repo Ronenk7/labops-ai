@@ -18,6 +18,10 @@ from labops_ai.diagnostics.diagnostic_models import (
     DiagnosticArtifactType,
     DiagnosticBundleManifest,
 )
+from labops_ai.diagnostics.diagnostic_payload import (
+    DiagnosticPayloadError,
+    parse_diagnostic_payload,
+)
 from labops_ai.diagnostics.diagnostic_pipeline import (
     DiagnosticBundlePipeline,
     DiagnosticBundlePipelineResult,
@@ -60,6 +64,7 @@ __all__ = [
     "DiagnosticBundleWriterProtocol",
     "DiagnosticIncidentRecord",
     "DiagnosticLogRecord",
+    "DiagnosticPayloadError",
     "DiagnosticNetworkCheck",
     "DiagnosticProcessRecord",
     "DiagnosticServiceRecord",
@@ -70,4 +75,5 @@ __all__ = [
     "build_diagnostic_json",
     "build_diagnostic_payload",
     "build_diagnostic_text",
+    "parse_diagnostic_payload",
 ]

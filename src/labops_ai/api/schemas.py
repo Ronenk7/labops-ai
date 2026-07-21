@@ -25,6 +25,17 @@ class ApiHealthResponse(BaseModel):
     version: str
 
 
+class RunIngestionRequest(BaseModel):
+    """Represent one complete remote diagnostic run."""
+
+    model_config = ConfigDict(
+        frozen=True,
+        extra="forbid",
+    )
+
+    diagnostics: dict[str, Any]
+
+
 class RunHistoryResponse(BaseModel):
     """Represent one monitoring run returned by the API."""
 
